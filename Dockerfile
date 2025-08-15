@@ -7,22 +7,42 @@ RUN apt-get update \
         cmake \
         make \
         zstd \
+        git\
         unzip \
+        nano \
         libzstd-dev \
         clang-19 \
         libclang-rt-19-dev \
         libomp-19-dev \
         clang-format-19 \
         llvm-19 \
+        lld-19 \
         llvm-19-dev \
         openmpi-bin \
         libopenmpi-dev \
         openjdk-25-jre openjdk-25-jdk
 
+RUN ln -s /usr/bin/clang-19 /usr/bin/clang
+RUN ln -s /usr/bin/clang++-19 /usr/bin/clang++
+RUN ln -s /usr/bin/llvm-link-19 /usr/bin/llvm-link
+RUN ln -s /usr/bin/opt-19 /usr/bin/opt
+RUN ln -s /usr/bin/llc-19 /usr/bin/llc
+
+ENV CC=clang-19
+ENV CXX=clang++-19
+ENV OMPI_CC=$CC
+ENV OMPI_CXX=$CXX
+
+ENV OMPI_ALLOW_RUN_AS_ROOT=1
+ENV OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
 ENV PMIX_MCA_gds="hash"
 ENV OMPI_MCA_memory="^patcher"
 
 # Compile CoVer
 COPY ./CoVer /tmp/cover_src
 WORKDIR /tmp/cover_src
-RUN mkdir build && cd build && cmake .. -DCMAKE_PREFIX_PATH=/opt/cover && cmake --build . --target install
+RUN mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/opt/cover -DCMAKE_BUILD_TYPE=Release && cmake --build . --target install -j
+
+ENV PATH="/opt/cover/bin:$PATH"
+
+WORKDIR /root
