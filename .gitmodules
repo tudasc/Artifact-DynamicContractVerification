@@ -1,0 +1,3 @@
+[submodule "CoVer"]
+	path = CoVer
+	url = https://github.com/tudasc/CoVer

@@ -1,0 +1,56 @@
+<jube>
+  <benchmark name="StaticDynamicCorrectessBenchmark" outpath="jube_correctness_out">
+    <comment>Runs multiple proxy apps to measure runtime overhead</comment>
+
+    <parameterset name="param_environment">
+      <parameter name="OMPI_CC" export="true">clang</parameter>
+      <parameter name="MPICH_CC" export="true">clang</parameter>
+      <parameter name="OMPI_CXX" export="true">clang++</parameter>
+      <parameter name="MPICH_CXX" export="true">clang++</parameter>
+    </parameterset>
+
+    <step name="compile_tools">
+      <use>param_environment</use>
+      <do>
+        <!-- CoVer - Get Json file -->
+        clangContracts -include /opt/cover/include/mpi_contracts.h "${test_filename}" 2&gt;&gt; plugin_stderr
+
+        <!-- MUST - Compile and perform detection -->
+        must-tsan-cc --tsan-json contract_messages.json "${test_filename}"
+        /usr/bin/timeout 20 mustrun --must:detection-json-file contract_messages.json ${MUST_CONST_OPTIONS} 2&gt;&gt; must_stderr
+        if [ $? -eq 124 ]; then
+            echo "TIMEOUT" &gt; must_stderr
+        fi
+      </do>
+    </step>
+
+    <!-- Regex pattern -->
+    <patternset name="patterns">
+      <pattern name="time">Elapsed time *= *$jube_pat_int (s)</pattern>
+      <pattern name="must_local_data_race">WARNING: ThreadSanitizer: data race</pattern>
+      <pattern name="timeout_pat">TIMEOUT</pattern>
+    </patternset>
+
+    <!-- Analyse -->
+    <analyser name="analyse">
+      <use>patterns</use>
+      <analyse step="compile_run_tools">
+        <file>lulesh_stdout</file>
+      </analyse>
+    </analyser>
+
+    <result>
+      <use>analyse</use>
+      <table name="result" style="pretty" sort="test_origin,test_name">
+        <column>jube_wp_id</column>
+        <column>app_name</column>
+        <column>test_origin</column>
+        <column>test_class</column>
+        <column title="CoVer">broken_contract_cnt</column>
+        <column title="MUST">must_local_data_race_cnt</column>
+        <column title="Timeout">timeout_pat</column>
+      </table>
+    </result>
+
+  </benchmark>
+</jube>
