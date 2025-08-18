@@ -13,25 +13,35 @@ RUN apt-get update \
         unzip \
         nano \
         libzstd-dev \
-        clang-19 \
-        libclang-rt-19-dev \
-        libomp-19-dev \
-        clang-format-19 \
-        llvm-19 \
-        lld-19 \
-        llvm-19-dev \
+        wget \
         openmpi-bin \
         libopenmpi-dev \
         openjdk-25-jre openjdk-25-jdk
 
-RUN ln -s /usr/bin/clang-19 /usr/bin/clang
-RUN ln -s /usr/bin/clang++-19 /usr/bin/clang++
-RUN ln -s /usr/bin/llvm-link-19 /usr/bin/llvm-link
-RUN ln -s /usr/bin/opt-19 /usr/bin/opt
-RUN ln -s /usr/bin/llc-19 /usr/bin/llc
+# Add LLVM Repo
+RUN echo "deb https://apt.llvm.org/unstable llvm-toolchain-20 main" \
+        > /etc/apt/sources.list.d/llvm.list && \
+    wget -qO /etc/apt/trusted.gpg.d/llvm.asc \
+        https://apt.llvm.org/llvm-snapshot.gpg.key
 
-ENV CC=clang-19
-ENV CXX=clang++-19
+RUN apt-get update \
+    && apt-get -y -qq --no-install-recommends install \
+        clang-20 \
+        libclang-rt-20-dev \
+        libomp-20-dev \
+        clang-format-20 \
+        llvm-20 \
+        lld-20 \
+        llvm-20-dev
+
+RUN ln -s /usr/bin/clang-20 /usr/bin/clang
+RUN ln -s /usr/bin/clang++-20 /usr/bin/clang++
+RUN ln -s /usr/bin/llvm-link-20 /usr/bin/llvm-link
+RUN ln -s /usr/bin/opt-20 /usr/bin/opt
+RUN ln -s /usr/bin/llc-20 /usr/bin/llc
+
+ENV CC=clang-20
+ENV CXX=clang++-20
 ENV OMPI_CC=$CC
 ENV OMPI_CXX=$CXX
 
