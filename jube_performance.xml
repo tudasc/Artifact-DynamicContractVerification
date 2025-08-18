@@ -10,25 +10,19 @@
     </parameterset>
 
     <parameterset name="param_compilemode">
-      <parameter name="compile_mode">base,tsan,cover_full,cover_filtered</parameter>
+      <parameter name="compile_mode">base,tsan,cover_full</parameter>
       <parameter name="compiler" mode="python">
         {
           "base": "mpicxx",
           "tsan": "mpicxx -fsanitize=thread",
           "cover_full": "clangContracts++ --predefined-contracts --instrument-contracts",
-          "cover_filtered": "clangContracts++ --predefined-contracts --instrument-contracts",
+          "cover_filtered": "clangContracts++ --predefined-contracts --instrument-contracts=filtered",
         }["${compile_mode}"]
       </parameter>
     </parameterset>
 
     <parameterset name="param_runmode">
       <parameter name="nprocs">1</parameter>
-      <parameter name="runner" mode="python">
-        {
-          "cover_full": "CoVerDynamicLauncher --launcher 'mpiexec -np ${nprocs}' -- ",
-          "cover_filtered": "CoVerDynamicLauncher --launcher 'mpiexec -np ${nprocs}' -- ",
-        }.get("${compile_mode}", "mpiexec -np ${nprocs}")
-      </parameter>
     </parameterset>
 
     <fileset name="lulesh_src">
@@ -48,17 +42,17 @@
       </do>
     </step>
 
-    <step name="run_lulesh" depend="compile_lulesh">
+    <step name="run_lulesh" depend="compile_lulesh" iterations="5">
       <use>param_environment</use>
       <use>param_runmode</use>
       <do>
-        ${runner} ./compile_lulesh/lulesh_${compile_mode} -s 20 &gt; lulesh_stdout
+        mpiexec -np ${nprocs} ./compile_lulesh/lulesh_${compile_mode} -s 20 &gt; lulesh_stdout
       </do>
     </step>
 
     <!-- Regex pattern -->
     <patternset name="patterns">
-      <pattern name="time">Elapsed time\s+=\s+$jube_pat_fp \(s\)</pattern>
+      <pattern name="time" type="float">Elapsed time\s+=\s+$jube_pat_fp \(s\)</pattern>
     </patternset>
 
     <!-- Analyse -->
@@ -73,7 +67,8 @@
       <use>analyse</use>
       <table name="result" style="pretty" sort="test_origin,test_name">
         <column title="Compile Mode">compile_mode</column>
-        <column title="Time (First)">time</column>
+        <column title="Time (Min)">time_min</column>
+        <column title="Time (Max)">time_max</column>
         <column title="Time (Avg)">time_avg</column>
         <column title="Time (StdDev)">time_std</column>
       </table>
