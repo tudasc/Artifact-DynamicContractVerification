@@ -1,3 +1,6 @@
 [submodule "CoVer"]
 	path = CoVer
 	url = https://github.com/tudasc/CoVer
+[submodule "LULESH"]
+	path = LULESH
+	url = https://github.com/LLNL/LULESH/

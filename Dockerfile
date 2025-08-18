@@ -7,7 +7,9 @@ RUN apt-get update \
         cmake \
         make \
         zstd \
-        git\
+        git \
+        python3 \
+        python3-venv \
         unzip \
         nano \
         libzstd-dev \
@@ -38,10 +40,21 @@ ENV OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
 ENV PMIX_MCA_gds="hash"
 ENV OMPI_MCA_memory="^patcher"
 
+# Install Python dependencies and ensure to activate virtualenv (by setting PATH variable)
+ENV VIRTUAL_ENV=/opt/venv
+RUN python3 -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+RUN pip install http://apps.fz-juelich.de/jsc/jube/download.php?version=latest
+
+
 # Compile CoVer
 COPY ./CoVer /tmp/cover_src
 WORKDIR /tmp/cover_src
 RUN mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/opt/cover -DCMAKE_BUILD_TYPE=Release && cmake --build . --target install -j
+
+# Copy Bench files
+COPY LULESH /root/LULESH
+COPY jube_performance.xml /root
 
 ENV PATH="/opt/cover/bin:$PATH"
 
