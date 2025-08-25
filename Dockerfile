@@ -4,6 +4,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update \
     && apt-get -y -qq --no-install-recommends install \
+        bzip2 \
         cmake \
         make \
         zstd \
@@ -27,6 +28,7 @@ RUN echo "deb https://apt.llvm.org/unstable llvm-toolchain-20 main" \
 RUN apt-get update \
     && apt-get -y -qq --no-install-recommends install \
         clang-20 \
+        flang-20 \
         libclang-rt-20-dev \
         libomp-20-dev \
         clang-format-20 \
@@ -42,8 +44,10 @@ RUN ln -s /usr/bin/llc-20 /usr/bin/llc
 
 ENV CC=clang-20
 ENV CXX=clang++-20
+ENV FC=flang-20
 ENV OMPI_CC=$CC
 ENV OMPI_CXX=$CXX
+ENV OMPI_FC=$FC
 
 ENV OMPI_ALLOW_RUN_AS_ROOT=1
 ENV OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
