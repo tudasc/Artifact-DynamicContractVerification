@@ -22,14 +22,14 @@
     </parameterset>
 
     <parameterset name="param_runmode">
-      <parameter name="nprocs">1</parameter>
+      <parameter name="nprocs">8</parameter>
     </parameterset>
 
     <fileset name="lulesh_src">
       <link>LULESH/</link>
     </fileset>
 
-    <step name="compile_lulesh">
+    <step name="compile_lulesh" suffix="${compile_mode}">
       <use>param_environment</use>
       <use>lulesh_src</use>
       <use>param_compilemode</use>
@@ -42,11 +42,11 @@
       </do>
     </step>
 
-    <step name="run_lulesh" depend="compile_lulesh" iterations="5">
+    <step name="run_lulesh" depend="compile_lulesh" suffix="${compile_mode}" iterations="5">
       <use>param_environment</use>
       <use>param_runmode</use>
       <do>
-        mpiexec -np ${nprocs} ./compile_lulesh/lulesh_${compile_mode} -s 20 &gt; lulesh_stdout
+        mpiexec -np ${nprocs} ./compile_lulesh/lulesh_${compile_mode} -s 10 &gt; lulesh_stdout
       </do>
     </step>
 
