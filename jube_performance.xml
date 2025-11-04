@@ -12,65 +12,121 @@
       <parameter name="MODULE_LOAD">
         module purge
         module use /home/yo30qaqy/modules
-        module use /work/groups/da_sc/spack/spmodules/linux-rhel9-x86_64/
         module load mpich/5 java gcc/11.4
         spack load llvm@main
       </parameter>
     </parameterset>
 
     <parameterset name="param_compilemode">
-      <parameter name="compile_mode">base,tsan,cover_full</parameter>
-      <parameter name="compiler" mode="python">
+      <parameter name="tool">base,must,cover</parameter>
+      <parameter name="proxy_app">stencil</parameter>
+      <parameter name="compiler_cxx" mode="python">
         {
           "base": "mpicxx",
           "tsan": "mpicxx -fsanitize=thread -mllvm -tsan-omit-by-pointer-capturing=0",
-          "cover_full": "${jube_benchmark_home}/builds/CoVer_Install/bin/clangContracts++ --predefined-contracts --instrument-contracts",
+          "must": "${jube_benchmark_home}/builds/MUST_Install/bin/must-tsan-cxx --wrap-target mpicxx",
+          "cover": "${jube_benchmark_home}/builds/CoVer_Install/bin/clangContracts++ --predefined-contracts --instrument-contracts",
           "cover_filtered": "${jube_benchmark_home}/builds/CoVer_Install/bin/clangContracts++ --predefined-contracts --instrument-contracts=filtered",
-        }["${compile_mode}"]
+        }["${tool}"]
+      </parameter>
+      <parameter name="compiler_c" mode="python">
+        {
+          "base": "mpicc",
+          "tsan": "mpicc -fsanitize=thread -mllvm -tsan-omit-by-pointer-capturing=0",
+          "must": "${jube_benchmark_home}/builds/MUST_Install/bin/must-tsan-cc --wrap-target mpicc",
+          "cover": "${jube_benchmark_home}/builds/CoVer_Install/bin/clangContracts --predefined-contracts --instrument-contracts",
+          "cover_filtered": "${jube_benchmark_home}/builds/CoVer_Install/bin/clangContracts --predefined-contracts --instrument-contracts=filtered",
+        }["${tool}"]
       </parameter>
     </parameterset>
 
     <parameterset name="param_runmode">
-      <parameter name="nprocs">8</parameter>
+      <parameter name="runner" mode="python">
+        {
+          "base": "mpiexec",
+          "tsan": "mpiexec",
+          "must": "${jube_benchmark_home}/builds/MUST_Install/bin/mustrun --must:tsan --must:output stdout --must:errorcode 0",
+          "cover": "mpiexec",
+          "cover_filtered": "mpiexec",
+        }["${tool}"]
+      </parameter>
+      <parameter name="nprocs" mode="python">
+        {
+          "lulesh": "27",
+          "stencil": "48",
+        }["${proxy_app}"]
+      </parameter>
+      <parameter name="proxy_params" mode="python">
+        {
+          "lulesh": "-s 20",
+          "stencil": "100 48000",
+        }["${proxy_app}"]
+      </parameter>
     </parameterset>
 
     <fileset name="lulesh_src">
       <link>LULESH/</link>
     </fileset>
-    <fileset name="cover_src">
-      <link>CoVer/</link>
+    <fileset name="stencil_src">
+      <link>Stencil/</link>
     </fileset>
 
     <step name="compile_cover">
       <use>param_environment</use>
-      <use>cover_src</use>
       <do>
         ${MODULE_LOAD}
-        cmake CoVer/ -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${jube_benchmark_home}/builds/CoVer_Install -B ${jube_benchmark_home}/builds/CoVer_Build -S ${jube_benchmark_home}/CoVer
+        cmake -S ${jube_benchmark_home}/CoVer -B ${jube_benchmark_home}/builds/CoVer_Build -DCMAKE_INSTALL_PREFIX=${jube_benchmark_home}/builds/CoVer_Install -DCMAKE_BUILD_TYPE=Release
         cmake --build ${jube_benchmark_home}/builds/CoVer_Build --target install
       </do>
     </step>
 
-    <step name="compile_lulesh" depend="compile_cover" suffix="${compile_mode}">
+    <step name="compile_must">
+      <use>param_environment</use>
+      <do>
+        ${MODULE_LOAD}
+        if [ -d ${jube_benchmark_home}/builds/MUST_Install ]; then
+          exit 0
+        fi
+        mkdir -p ${jube_benchmark_home}/builds/MUST_Source
+        tar xvf ${jube_benchmark_home}/MUST-v1.11.2.tar.gz --strip-components=1 -C ${jube_benchmark_home}/builds/MUST_Source
+
+        cmake -S ${jube_benchmark_home}/builds/MUST_Source -B ${jube_benchmark_home}/builds/MUST_Build -DCMAKE_INSTALL_PREFIX=${jube_benchmark_home}/builds/MUST_Install -DCMAKE_BUILD_TYPE=Release -DENABLE_FORTRAN=OFF -DENABLE_TSAN=ON
+        cmake --build ${jube_benchmark_home}/builds/MUST_Build --target install
+      </do>
+    </step>
+
+    <step name="tools_available" depend="compile_cover,compile_must"></step>
+
+    <step name="compile_lulesh" depend="tools_available" suffix="${tool}">
       <use>param_environment</use>
       <use>lulesh_src</use>
       <use>param_compilemode</use>
       <do>
         ${MODULE_LOAD}
         cd LULESH
-        make CXX="${compiler} -DUSE_MPI=1" CXXFLAGS="-g -O3 -I." LULESH_EXEC="lulesh_${compile_mode}"
+        make CXX="${compiler_cxx} -DUSE_MPI=1" CXXFLAGS="-g -O3 -I." LULESH_EXEC="lulesh_${tool}"
         make clean <!-- Removes everything but the renamed executable -->
         cd ..
-        mv LULESH/lulesh_${compile_mode} .
+        mv LULESH/lulesh_${tool} .
       </do>
     </step>
 
-    <step name="run_lulesh" depend="compile_lulesh" suffix="${compile_mode}" iterations="1">
+    <step name="compile_stencil" depend="tools_available" suffix="${tool}">
+      <use>param_environment</use>
+      <use>stencil_src</use>
+      <use>param_compilemode</use>
+      <do>
+        ${MODULE_LOAD}
+        ${compiler_c} -g -O3 -DRADIUS=1 -DSTAR=1 -lm Stencil/stencil.c -o stencil_${tool}
+      </do>
+    </step>
+
+    <step name="run_proxy_app" depend="compile_lulesh,compile_stencil" suffix="${tool}" iterations="1">
       <use>param_environment</use>
       <use>param_runmode</use>
       <do>
         ${MODULE_LOAD}
-        mpiexec -np ${nprocs} ./compile_lulesh/lulesh_${compile_mode} -s 10 &gt; lulesh_stdout
+        ${runner} -np ${nprocs} ./compile_${proxy_app}/${proxy_app}_${tool} ${proxy_params} &gt; proxy_out
       </do>
     </step>
 
@@ -82,15 +138,16 @@
     <!-- Analyse -->
     <analyser name="analyse">
       <use>patterns</use>
-      <analyse step="run_lulesh">
-        <file>lulesh_stdout</file>
+      <analyse step="run_proxy_app">
+        <file>proxy_out</file>
       </analyse>
     </analyser>
 
     <result>
       <use>analyse</use>
-      <table name="result" style="pretty" sort="test_origin,test_name">
-        <column title="Compile Mode">compile_mode</column>
+      <table name="result" style="pretty" sort="proxy_app,tool">
+        <column title="Proxy App">proxy_app</column>
+        <column title="Tool">tool</column>
         <column title="Time (Min)">time_min</column>
         <column title="Time (Max)">time_max</column>
         <column title="Time (Avg)">time_avg</column>
