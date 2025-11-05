@@ -15,6 +15,9 @@
         module load mpich/5 java gcc/11.4
         spack load llvm@main
       </parameter>
+      <parameter name="PMIX_MCA_gds" export="true">hash</parameter>
+      <parameter name="UCX_MEM_MMAP_HOOK_MODE" export="true">none</parameter>
+      <parameter name="OMPI_MCA_memory" export="true">^patcher</parameter>
     </parameterset>
 
     <parameterset name="param_compilemode">
@@ -117,7 +120,7 @@
       <use>param_compilemode</use>
       <do>
         ${MODULE_LOAD}
-        ${compiler_c} -g -O3 -DRADIUS=1 -DSTAR=1 -lm Stencil/stencil.c -o stencil_${tool}
+        ${compiler_c} -g -O3 -DRADIUS=1 -DSTAR=1 -DDOUBLE=1 -lm Stencil/stencil.c -o stencil_${tool}
       </do>
     </step>
 
