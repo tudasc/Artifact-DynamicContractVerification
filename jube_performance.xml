@@ -19,7 +19,6 @@
 
     <parameterset name="param_compilemode">
       <parameter name="tool">base,must,cover</parameter>
-      <parameter name="proxy_app">stencil</parameter>
       <parameter name="compiler_cxx" mode="python">
         {
           "base": "mpicxx",
@@ -50,16 +49,17 @@
           "cover_filtered": "mpiexec",
         }["${tool}"]
       </parameter>
-      <parameter name="nprocs" mode="python">
-        {
-          "lulesh": "27",
-          "stencil": "48",
-        }["${proxy_app}"]
-      </parameter>
+      <parameter name="proxy_app">lulesh,stencil</parameter>
       <parameter name="proxy_params" mode="python">
         {
           "lulesh": "-s 20",
           "stencil": "100 48000",
+        }["${proxy_app}"]
+      </parameter>
+      <parameter name="nprocs" mode="python">
+        {
+          "lulesh": "27",
+          "stencil": "48",
         }["${proxy_app}"]
       </parameter>
     </parameterset>
@@ -121,25 +121,30 @@
       </do>
     </step>
 
-    <step name="run_proxy_app" depend="compile_lulesh,compile_stencil" suffix="${tool}" iterations="1">
+    <step name="run_proxy_app" depend="compile_lulesh,compile_stencil" suffix="${proxy_app}_${tool}" iterations="1">
       <use>param_environment</use>
       <use>param_runmode</use>
       <do>
         ${MODULE_LOAD}
         ${runner} -np ${nprocs} ./compile_${proxy_app}/${proxy_app}_${tool} ${proxy_params} &gt; proxy_out
+        if [ "${proxy_app}" == "lulesh" ]; then
+          cat proxy_out | grep "Elapsed time" | sed -r 's/Elapsed time\s*=\s*(.*)\s*\(s\)/\1/' &gt; time_parsed
+        elif [ "${proxy_app}" == "stencil" ]; then
+          cat proxy_out | grep "Total time" | sed -r 's/.*Total time\s*\(s\):\s*(.*)/\1/' &gt; time_parsed
+        fi
       </do>
     </step>
 
     <!-- Regex pattern -->
     <patternset name="patterns">
-      <pattern name="time" type="float">Elapsed time\s+=\s+$jube_pat_fp \(s\)</pattern>
+      <pattern name="time" type="float">$jube_pat_fp</pattern>
     </patternset>
 
     <!-- Analyse -->
     <analyser name="analyse">
       <use>patterns</use>
       <analyse step="run_proxy_app">
-        <file>proxy_out</file>
+        <file>time_parsed</file>
       </analyse>
     </analyser>
 
