@@ -4,3 +4,6 @@
 [submodule "LULESH"]
 	path = LULESH
 	url = https://github.com/LLNL/LULESH/
+[submodule "TeaLeaf"]
+	path = TeaLeaf
+	url = https://github.com/UoB-HPC/TeaLeaf
