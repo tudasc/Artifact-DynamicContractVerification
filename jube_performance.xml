@@ -154,6 +154,8 @@
           cat proxy_out | grep "Elapsed time" | sed -r 's/Elapsed time\s*=\s*(.*)\s*\(s\)/\1/' &gt; time_parsed
         elif [ "${proxy_app}" == "stencil" ]; then
           cat proxy_out | grep "Total time" | sed -r 's/.*Total time\s*\(s\):\s*(.*)/\1/' &gt; time_parsed
+        elif [ "${proxy_app}" == "tealeaf" ]; then
+          cat proxy_out | grep Wallclock | tail -1 | sed -r 's/Wallclock:\s*(.*)s/\1/' &gt; time_parsed
         fi
       </do>
     </step>
