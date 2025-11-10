@@ -1,0 +1,85 @@
+<jube>
+  <benchmark name="CoVerDynamicPerfBench" outpath="results_correctness_raw">
+    <comment>Runs RMARaceBench and MPI-BugBench tests to measure classification quality</comment>
+
+    <!-- Generic Setup -->
+    <include from="jube_common.xml" path="common_setup/parameterset" />
+    <include from="jube_common.xml" path="common_setup/step" />
+
+    <parameterset name="param_correctness" duplicate="concat" >
+      <parameter name="test_path" mode="shell" tag="RRB"> <!-- RMARaceBench -->
+        find ${jube_benchmark_home}/Correctness_Data/RMARaceBench -type f -name "*local*" | paste -s -d ","
+      </parameter>
+      <parameter name="test_path" mode="shell" tag="MBB"> <!-- MPI-BugBench -->
+        find ${jube_benchmark_home}/Correctness_Data/MPI-BugBench -type f -name "*local*" | paste -s -d ","
+      </parameter>
+      <parameter name="test_name" mode="shell">
+        basename "${test_path}" | cut -d. -f1 | tr -d "\n"
+      </parameter>
+    </parameterset>
+    <parameterset name="param_correxec">
+      <parameter name="analysis_tool" mode="python">
+        {
+          "base": "base",
+          "must": "must",
+          "cover": "cover,cover_static",
+          "cover_filtered": "cover",
+        }["${tool}"]
+      </parameter>
+    </parameterset>
+
+    <step name="compile_test" depend="tools_available" suffix="${tool}_${test_name}">
+      <use>param_environment</use>
+      <use>param_correctness</use>
+      <use>param_compilemode</use>
+      <do>
+        ${MODULE_LOAD}
+        ${compiler_c} -g ${test_path} -o test.exe
+      </do>
+    </step>
+
+    <step name="run_test" depend="compile_test" suffix="${tool}_${test_name}">
+      <use>param_environment</use>
+      <use>param_correxec</use>
+      <do>
+        if [ "${analysis_tool}" == "cover_static" ]; then
+          cat compile_test/stderr &gt; tool_err
+        else
+          ${MODULE_LOAD}
+          ${runner} -np 2 compile_test/test.exe 2&gt; tool_err
+        fi
+        if [[ "${analysis_tool}" == cover* ]] &amp;&amp; [[ "$(cat tool_err)" == *"## Contract violation detected! ##"* ]]; then
+          echo "REPORT" &gt; tool_parsed; exit 0
+        fi
+        if [[ "${analysis_tool}" == must ]] &amp;&amp; [[ "$(cat tool_err)" == *"ThreadSanitizer: data race"* ]]; then
+          echo "REPORT" &gt; tool_parsed; exit 0
+        fi
+        echo "OK" &gt; tool_parsed 
+      </do>
+    </step>
+
+    <!-- Regex pattern -->
+    <patternset name="patterns">
+      <pattern name="error_report">(OK|REPORT)</pattern>
+    </patternset>
+
+    <!-- Analyse -->
+    <analyser name="analyse">
+      <use>patterns</use>
+      <analyse step="run_test">
+        <file>tool_parsed</file>
+      </analyse>
+    </analyser>
+
+    <result>
+      <use>analyse</use>
+      <table name="result" style="pretty" sort="proxy_app,tool">
+        <column title="Test Case">test_name</column>
+        <column title="Tool">analysis_tool</column>
+        <column title="Expect">time_min</column>
+        <column title="Result">error_report</column>
+      </table>
+    </result>
+
+  </benchmark>
+</jube>

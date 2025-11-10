@@ -1,57 +1,12 @@
 <jube>
-  <benchmark name="StaticDynamicCorrectessBenchmark" outpath="results_performance_raw">
+  <benchmark name="CoVerDynamicPerfBench" outpath="results_performance_raw">
     <comment>Runs multiple proxy apps to measure runtime overhead</comment>
 
-    <parameterset name="param_environment">
-      <parameter name="CC" export="true">clang</parameter>
-      <parameter name="OMPI_CC" export="true">clang</parameter>
-      <parameter name="MPICH_CC" export="true">clang</parameter>
-      <parameter name="CXX" export="true">clang++</parameter>
-      <parameter name="OMPI_CXX" export="true">clang++</parameter>
-      <parameter name="MPICH_CXX" export="true">clang++</parameter>
-      <parameter name="MODULE_LOAD">
-        module purge
-        module use /home/yo30qaqy/modules
-        module load mpich/5 java gcc/11.4
-        spack load llvm@main
-      </parameter>
-      <parameter name="PMIX_MCA_gds" export="true">hash</parameter>
-      <parameter name="UCX_MEM_MMAP_HOOK_MODE" export="true">none</parameter>
-      <parameter name="OMPI_MCA_memory" export="true">^patcher</parameter>
-    </parameterset>
+    <!-- Generic Setup -->
+    <include from="jube_common.xml" path="common_setup/parameterset" />
+    <include from="jube_common.xml" path="common_setup/step" />
 
-    <parameterset name="param_compilemode">
-      <parameter name="tool">base,must,cover</parameter>
-      <parameter name="compiler_cxx" mode="python">
-        {
-          "base": "mpicxx",
-          "tsan": "mpicxx -fsanitize=thread -mllvm -tsan-omit-by-pointer-capturing=0",
-          "must": "${jube_benchmark_home}/builds/MUST_Install/bin/must-tsan-cxx --wrap-target mpicxx",
-          "cover": "${jube_benchmark_home}/builds/CoVer_Install/bin/clangContracts++ --predefined-contracts --instrument-contracts",
-          "cover_filtered": "${jube_benchmark_home}/builds/CoVer_Install/bin/clangContracts++ --predefined-contracts --instrument-contracts=filtered",
-        }["${tool}"]
-      </parameter>
-      <parameter name="compiler_c" mode="python">
-        {
-          "base": "mpicc",
-          "tsan": "mpicc -fsanitize=thread -mllvm -tsan-omit-by-pointer-capturing=0",
-          "must": "${jube_benchmark_home}/builds/MUST_Install/bin/must-tsan-cc --wrap-target mpicc",
-          "cover": "${jube_benchmark_home}/builds/CoVer_Install/bin/clangContracts --predefined-contracts --instrument-contracts",
-          "cover_filtered": "${jube_benchmark_home}/builds/CoVer_Install/bin/clangContracts --predefined-contracts --instrument-contracts=filtered",
-        }["${tool}"]
-      </parameter>
-    </parameterset>
-
-    <parameterset name="param_runmode">
-      <parameter name="runner" mode="python">
-        {
-          "base": "mpiexec",
-          "tsan": "mpiexec",
-          "must": "${jube_benchmark_home}/builds/MUST_Install/bin/mustrun --must:tsan --must:output stdout --must:errorcode 0",
-          "cover": "mpiexec",
-          "cover_filtered": "mpiexec",
-        }["${tool}"]
-      </parameter>
+    <parameterset name="param_proxyapp">
       <parameter name="proxy_app">lulesh,stencil,tealeaf</parameter>
       <parameter name="proxy_params" mode="python">
         {
@@ -78,32 +33,6 @@
     <fileset name="tealeaf_src">
       <link>TeaLeaf/</link>
     </fileset>
-
-    <step name="compile_cover">
-      <use>param_environment</use>
-      <do>
-        ${MODULE_LOAD}
-        cmake -S ${jube_benchmark_home}/CoVer -B ${jube_benchmark_home}/builds/CoVer_Build -DCMAKE_INSTALL_PREFIX=${jube_benchmark_home}/builds/CoVer_Install -DCMAKE_BUILD_TYPE=Release
-        cmake --build ${jube_benchmark_home}/builds/CoVer_Build --target install
-      </do>
-    </step>
-
-    <step name="compile_must">
-      <use>param_environment</use>
-      <do>
-        ${MODULE_LOAD}
-        if [ -d ${jube_benchmark_home}/builds/MUST_Install ]; then
-          exit 0
-        fi
-        mkdir -p ${jube_benchmark_home}/builds/MUST_Source
-        tar xvf ${jube_benchmark_home}/MUST-v1.11.2.tar.gz --strip-components=1 -C ${jube_benchmark_home}/builds/MUST_Source
-
-        cmake -S ${jube_benchmark_home}/builds/MUST_Source -B ${jube_benchmark_home}/builds/MUST_Build -DCMAKE_INSTALL_PREFIX=${jube_benchmark_home}/builds/MUST_Install -DCMAKE_BUILD_TYPE=Release -DENABLE_FORTRAN=OFF -DENABLE_TSAN=ON
-        cmake --build ${jube_benchmark_home}/builds/MUST_Build --target install
-      </do>
-    </step>
-
-    <step name="tools_available" depend="compile_cover,compile_must"></step>
 
     <step name="compile_lulesh" depend="tools_available" suffix="${tool}">
       <use>param_environment</use>
@@ -145,7 +74,7 @@
 
     <step name="run_proxy_app" depend="compile_lulesh,compile_stencil,compile_tealeaf" suffix="${proxy_app}_${tool}" iterations="1">
       <use>param_environment</use>
-      <use>param_runmode</use>
+      <use>param_proxyapp</use>
       <do>
         ${MODULE_LOAD}
         cp ${jube_benchmark_home}/bench_data/tea.{in,problems} .

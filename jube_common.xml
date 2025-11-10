@@ -1,0 +1,94 @@
+<jube>
+  <common_setup>
+    <parameterset name="param_environment">
+      <parameter name="CC" export="true">clang</parameter>
+      <parameter name="OMPI_CC" export="true">clang</parameter>
+      <parameter name="MPICH_CC" export="true">clang</parameter>
+      <parameter name="OSHMEM_CC" export="true">clang</parameter>
+      <parameter name="CXX" export="true">clang++</parameter>
+      <parameter name="OMPI_CXX" export="true">clang++</parameter>
+      <parameter name="MPICH_CXX" export="true">clang++</parameter>
+      <parameter name="OSHMEM_CXX" export="true">clang++</parameter>
+      <parameter name="PMIX_MCA_gds" export="true">hash</parameter>
+      <parameter name="UCX_MEM_MMAP_HOOK_MODE" export="true">none</parameter>
+      <parameter name="OMPI_MCA_memory" export="true">^patcher</parameter>
+      <parameter name="MODULE_LOAD" tag="!ompi">
+        module purge
+        module use /home/yo30qaqy/modules
+        module load mpich/5 java gcc/11.4
+        spack load llvm@main
+      </parameter>
+      <parameter name="MODULE_LOAD" tag="ompi">
+        module purge
+        module use /home/yo30qaqy/modules
+        module load ompi/5 java gcc/11.4
+        spack load llvm@main
+      </parameter>
+      <parameter name="builds_folder" tag="!ompi">${jube_benchmark_home}/builds/mpich</parameter>
+      <parameter name="builds_folder" tag="ompi">${jube_benchmark_home}/builds/ompi</parameter>
+      <parameter name="MUST_DISABLE_TSAN_ONREPORT" export="true">1</parameter>
+      <parameter name="TSAN_OPTIONS" export="true">log_path=stderr</parameter>
+    </parameterset>
+    <parameterset name="param_compilemode" duplicate="concat">
+      <parameter name="tool" tag="base">base</parameter>
+      <parameter name="tool" tag="must">must</parameter>
+      <parameter name="tool" tag="cover">cover</parameter>
+      <parameter name="def_wrapper_c" tag="!ompi">mpicc</parameter>
+      <parameter name="def_wrapper_c" tag="ompi">oshcc</parameter>
+      <parameter name="def_wrapper_cxx" tag="!ompi">mpicxx</parameter>
+      <parameter name="def_wrapper_cxx" tag="ompi">oshcxx</parameter>
+      <parameter name="compiler_cxx" mode="python">
+        {
+          "base": "${def_wrapper_cxx}",
+          "tsan": "${def_wrapper_cxx} -fsanitize=thread -mllvm -tsan-omit-by-pointer-capturing=0",
+          "must": "${builds_folder}/MUST_Install/bin/must-tsan-cxx --wrap-target ${def_wrapper_cxx}",
+          "cover": "${builds_folder}/CoVer_Install/bin/clangContracts++ --wrap-target ${def_wrapper_cxx} --predefined-contracts --instrument-contracts",
+          "cover_filtered": "${builds_folder}/CoVer_Install/bin/clangContracts++ --wrap-target ${def_wrapper_cxx} --predefined-contracts --instrument-contracts=filtered",
+        }["${tool}"]
+      </parameter>
+      <parameter name="compiler_c" mode="python">
+        {
+          "base": "${def_wrapper_c}",
+          "tsan": "${def_wrapper_c} -fsanitize=thread -mllvm -tsan-omit-by-pointer-capturing=0",
+          "must": "${builds_folder}/MUST_Install/bin/must-tsan-cc --wrap-target ${def_wrapper_c}",
+          "cover": "${builds_folder}/CoVer_Install/bin/clangContracts --wrap-target ${def_wrapper_c} --predefined-contracts --instrument-contracts",
+          "cover_filtered": "${builds_folder}/CoVer_Install/bin/clangContracts --wrap-target ${def_wrapper_c} --predefined-contracts --instrument-contracts=filtered",
+        }["${tool}"]
+      </parameter>
+      <parameter name="runner" mode="python">
+        {
+          "base": "mpiexec",
+          "tsan": "mpiexec",
+          "must": "${builds_folder}/MUST_Install/bin/mustrun --must:tsan --must:rma-race --must:output stdout --must:errorcode 0",
+          "cover": "mpiexec",
+          "cover_filtered": "mpiexec",
+        }["${tool}"]
+      </parameter>
+    </parameterset>
+    <step name="compile_cover">
+      <use>param_environment</use>
+      <do>
+        ${MODULE_LOAD}
+        cmake -S ${jube_benchmark_home}/CoVer -B ${builds_folder}/CoVer_Build -DCMAKE_INSTALL_PREFIX=${builds_folder}/CoVer_Install -DCMAKE_BUILD_TYPE=Release
+        cmake --build ${builds_folder}/CoVer_Build --target install -j 32
+      </do>
+    </step>
+
+    <step name="compile_must" tag="must">
+      <use>param_environment</use>
+      <do>
+        ${MODULE_LOAD}
+        if [ -d ${builds_folder}/MUST_Install ]; then
+          exit 0
+        fi
+        mkdir -p ${builds_folder}/MUST_Source
+        tar xvf ${jube_benchmark_home}/MUST-v1.11.2.tar.gz --strip-components=1 -C ${builds_folder}/MUST_Source
+        sed 's/symbolize=0/symbolize=1/' -i ${builds_folder}/MUST_Source/utility/mustrun2.sh
+        cmake -S ${builds_folder}/MUST_Source -B ${builds_folder}/MUST_Build -DCMAKE_INSTALL_PREFIX=${builds_folder}/MUST_Install -DCMAKE_BUILD_TYPE=Release -DENABLE_FORTRAN=OFF -DENABLE_TSAN=ON -DUSE_BACKWARD=OFF
+        cmake --build ${builds_folder}/MUST_Build --target install -j 32
+      </do>
+    </step>
+    <step name="tools_available" depend="compile_cover" tag="!must" />
+    <step name="tools_available" depend="compile_cover,compile_must" tag="must" />
+  </common_setup>
+</jube>
