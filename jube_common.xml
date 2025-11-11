@@ -15,13 +15,13 @@
       <parameter name="MODULE_LOAD" tag="!ompi">
         module purge
         module use /home/yo30qaqy/modules
-        module load mpich/5 java gcc/11.4
+        module load mpich/5 java gcc/11.4 sos
         spack load llvm@main
       </parameter>
       <parameter name="MODULE_LOAD" tag="ompi">
         module purge
         module use /home/yo30qaqy/modules
-        module load ompi/5 java gcc/11.4
+        module load ompi/5 java gcc/11.4 sos
         spack load llvm@main
       </parameter>
       <parameter name="builds_folder" tag="!ompi">${jube_benchmark_home}/builds/mpich</parameter>
@@ -33,10 +33,8 @@
       <parameter name="tool" tag="base">base</parameter>
       <parameter name="tool" tag="must">must</parameter>
       <parameter name="tool" tag="cover">cover</parameter>
-      <parameter name="def_wrapper_c" tag="!ompi">mpicc</parameter>
-      <parameter name="def_wrapper_c" tag="ompi">oshcc</parameter>
-      <parameter name="def_wrapper_cxx" tag="!ompi">mpicxx</parameter>
-      <parameter name="def_wrapper_cxx" tag="ompi">oshcxx</parameter>
+      <parameter name="def_wrapper_c">oshcc -lmpi</parameter>
+      <parameter name="def_wrapper_cxx">oshcxx -lmpi</parameter>
       <parameter name="compiler_cxx" mode="python">
         {
           "base": "${def_wrapper_cxx}",
@@ -69,7 +67,7 @@
       <use>param_environment</use>
       <do>
         ${MODULE_LOAD}
-        cmake -S ${jube_benchmark_home}/CoVer -B ${builds_folder}/CoVer_Build -DCMAKE_INSTALL_PREFIX=${builds_folder}/CoVer_Install -DCMAKE_BUILD_TYPE=Release
+        cmake -S ${jube_benchmark_home}/CoVer -B ${builds_folder}/CoVer_Build -DCMAKE_INSTALL_PREFIX=${builds_folder}/CoVer_Install -DCMAKE_BUILD_TYPE=Release -DSHMEM_HEADER_PATH=${jube_benchmark_home}/bench_data/shmem.h
         cmake --build ${builds_folder}/CoVer_Build --target install -j 32
       </do>
     </step>
