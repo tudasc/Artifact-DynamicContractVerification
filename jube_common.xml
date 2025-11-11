@@ -5,10 +5,12 @@
       <parameter name="OMPI_CC" export="true">clang</parameter>
       <parameter name="MPICH_CC" export="true">clang</parameter>
       <parameter name="OSHMEM_CC" export="true">clang</parameter>
+      <parameter name="SHMEM_CC" export="true">clang</parameter>
       <parameter name="CXX" export="true">clang++</parameter>
       <parameter name="OMPI_CXX" export="true">clang++</parameter>
       <parameter name="MPICH_CXX" export="true">clang++</parameter>
       <parameter name="OSHMEM_CXX" export="true">clang++</parameter>
+      <parameter name="SHMEM_CXX" export="true">clang++</parameter>
       <parameter name="PMIX_MCA_gds" export="true">hash</parameter>
       <parameter name="UCX_MEM_MMAP_HOOK_MODE" export="true">none</parameter>
       <parameter name="OMPI_MCA_memory" export="true">^patcher</parameter>
