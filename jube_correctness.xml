@@ -22,7 +22,7 @@
         {
           "base": "base",
           "must": "must",
-          "cover": "cover,cover_static",
+          "cover": "cover,cover-static",
           "cover_filtered": "cover",
         }["${tool}"]
       </parameter>
@@ -38,11 +38,11 @@
       </do>
     </step>
 
-    <step name="run_test" depend="compile_test" suffix="${tool}_${test_name}">
+    <step name="run_test" depend="compile_test" suffix="${analysis_tool}_${test_name}">
       <use>param_environment</use>
       <use>param_correxec</use>
       <do>
-        if [ "${analysis_tool}" == "cover_static" ]; then
+        if [ "${analysis_tool}" == "cover-static" ]; then
           cat compile_test/stderr &gt; tool_err
         else
           ${MODULE_LOAD}
