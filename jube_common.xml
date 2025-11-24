@@ -36,7 +36,7 @@
       <parameter name="tool" tag="must">must</parameter>
       <parameter name="tool" tag="cover">cover</parameter>
       <parameter name="def_wrapper_c">oshcc -lmpi</parameter>
-      <parameter name="def_wrapper_cxx">oshcxx -lmpi</parameter>
+      <parameter name="def_wrapper_cxx">oshc++ -lmpi</parameter>
       <parameter name="compiler_cxx" mode="python">
         {
           "base": "${def_wrapper_cxx}",
@@ -83,6 +83,7 @@
         fi
         mkdir -p ${builds_folder}/MUST_Source
         tar xvf ${jube_benchmark_home}/MUST-v1.11.2.tar.gz --strip-components=1 -C ${builds_folder}/MUST_Source
+        patch -p1 --directory=${builds_folder}/MUST_Source &lt; ${jube_benchmark_home}/bench_data/425.patch
         sed 's/symbolize=0/symbolize=1/' -i ${builds_folder}/MUST_Source/utility/mustrun2.sh
         cmake -S ${builds_folder}/MUST_Source -B ${builds_folder}/MUST_Build -DCMAKE_INSTALL_PREFIX=${builds_folder}/MUST_Install -DCMAKE_BUILD_TYPE=Release -DENABLE_FORTRAN=OFF -DENABLE_TSAN=ON -DUSE_BACKWARD=OFF
         cmake --build ${builds_folder}/MUST_Build --target install -j 32
