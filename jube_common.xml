@@ -14,16 +14,17 @@
       <parameter name="PMIX_MCA_gds" export="true">hash</parameter>
       <parameter name="UCX_MEM_MMAP_HOOK_MODE" export="true">none</parameter>
       <parameter name="OMPI_MCA_memory" export="true">^patcher</parameter>
+      <parameter name="OMPI_MCA_coll" export="true">^hcoll</parameter>
       <parameter name="MODULE_LOAD" tag="!ompi">
         module purge
         module use /home/yo30qaqy/modules
-        module load mpich/5 java gcc/11.4 sos
+        module load gcc/11.4 mpich/5 java sos_mpich
         spack load llvm@main
       </parameter>
       <parameter name="MODULE_LOAD" tag="ompi">
         module purge
         module use /home/yo30qaqy/modules
-        module load ompi/5 java gcc/11.4 sos
+        module load gcc/11.4 ompi/5 java sos_ompi
         spack load llvm@main
       </parameter>
       <parameter name="builds_folder" tag="!ompi">${jube_benchmark_home}/builds/mpich</parameter>
