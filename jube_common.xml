@@ -70,7 +70,7 @@
       <use>param_environment</use>
       <do>
         ${MODULE_LOAD}
-        cmake -S ${jube_benchmark_home}/CoVer -B ${builds_folder}/CoVer_Build -DCMAKE_INSTALL_PREFIX=${builds_folder}/CoVer_Install -DCMAKE_BUILD_TYPE=Release -DSHMEM_HEADER_PATH=${jube_benchmark_home}/bench_data/shmem.h
+        cmake -S ${jube_benchmark_home}/Tool_Sources/CoVer -B ${builds_folder}/CoVer_Build -DCMAKE_INSTALL_PREFIX=${builds_folder}/CoVer_Install -DCMAKE_BUILD_TYPE=Release -DSHMEM_HEADER_PATH=${jube_benchmark_home}/bench_data/shmem.h
         cmake --build ${builds_folder}/CoVer_Build --target install -j 32
       </do>
     </step>
@@ -83,7 +83,7 @@
           exit 0
         fi
         mkdir -p ${builds_folder}/MUST_Source
-        tar xvf ${jube_benchmark_home}/MUST-v1.11.2.tar.gz --strip-components=1 -C ${builds_folder}/MUST_Source
+        tar xvf ${jube_benchmark_home}/Tool_Sources/MUST-v1.11.2.tar.gz --strip-components=1 -C ${builds_folder}/MUST_Source
         patch -p1 --directory=${builds_folder}/MUST_Source &lt; ${jube_benchmark_home}/bench_data/425.patch
         sed 's/symbolize=0/symbolize=1/' -i ${builds_folder}/MUST_Source/utility/mustrun2.sh
         cmake -S ${builds_folder}/MUST_Source -B ${builds_folder}/MUST_Build -DCMAKE_INSTALL_PREFIX=${builds_folder}/MUST_Install -DCMAKE_BUILD_TYPE=Release -DENABLE_FORTRAN=OFF -DENABLE_TSAN=ON -DUSE_BACKWARD=OFF

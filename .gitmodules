@@ -1,5 +1,5 @@
 [submodule "CoVer"]
-	path = CoVer
+	path = Tool_Sources/CoVer
 	url = https://github.com/tudasc/CoVer
 [submodule "LULESH"]
 	path = Performance_Sources/LULESH
