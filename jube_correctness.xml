@@ -8,10 +8,10 @@
 
     <parameterset name="param_correctness" duplicate="concat" >
       <parameter name="test_path" mode="shell" tag="RRB"> <!-- RMARaceBench -->
-        find ${jube_benchmark_home}/Correctness_Data/RMARaceBench -type f -name "*local*" | paste -s -d ","
+        find ${jube_benchmark_home}/Correctness_Sources/RMARaceBench -type f -name "*local*" | paste -s -d ","
       </parameter>
       <parameter name="test_path" mode="shell" tag="MBB"> <!-- MPI-BugBench -->
-        find ${jube_benchmark_home}/Correctness_Data/MPI-BugBench -type f -name "*local*" | paste -s -d ","
+        find ${jube_benchmark_home}/Correctness_Sources/MPI-BugBench -type f -name "*local*" | paste -s -d ","
       </parameter>
       <parameter name="test_name" mode="shell">
         basename "${test_path}" | cut -d. -f1 | tr -d "\n"

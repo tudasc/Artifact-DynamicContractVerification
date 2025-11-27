@@ -2,8 +2,8 @@
 	path = CoVer
 	url = https://github.com/tudasc/CoVer
 [submodule "LULESH"]
-	path = LULESH
+	path = Performance_Sources/LULESH
 	url = https://github.com/LLNL/LULESH/
 [submodule "TeaLeaf"]
-	path = TeaLeaf
+	path = Performance_Sources/TeaLeaf
 	url = https://github.com/UoB-HPC/TeaLeaf

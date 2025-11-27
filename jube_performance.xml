@@ -25,13 +25,13 @@
     </parameterset>
 
     <fileset name="lulesh_src">
-      <link>LULESH/</link>
+      <link>Performance_Sources/LULESH/</link>
     </fileset>
     <fileset name="stencil_src">
-      <link>Stencil/</link>
+      <link>Performance_Sources/Stencil/</link>
     </fileset>
     <fileset name="tealeaf_src">
-      <link>TeaLeaf/</link>
+      <link>Performance_Sources/TeaLeaf/</link>
     </fileset>
 
     <step name="compile_lulesh" depend="tools_available" suffix="${tool}">
