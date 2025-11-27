@@ -65,6 +65,7 @@ int main(int argc, char** argv)
     MPI_Comm_free(&shmem_comm);
 
     shmem_finalize();
+    MPI_Finalize();
     
     return 0;
 }
