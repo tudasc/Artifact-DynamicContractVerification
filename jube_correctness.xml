@@ -55,12 +55,17 @@
         else
           ${MODULE_LOAD}
           timeout 60 ${runner} -np 2 compile_test/test.exe 2&gt; tool_err
+          if [[ "${analysis_tool}" == cover ]]; then
+            <!-- CoVer "runs again" to parse the coverage info -->
+            compile_test/test.exe --cover:check-coverage 2&gt;&gt; tool_err
+          fi
         fi
         if [[ $? == 124 ]]; then <!-- Check for timeout -->
           echo "TIMEOUT" &gt; tool_parsed; exit 0
         fi
-        if [[ "${analysis_tool}" == cover* ]] &amp;&amp; [[ "$(cat tool_err)" == *"## Contract violation detected! ##"* ]]; then
-          echo "REPORT" &gt; tool_parsed; exit 0
+        if [[ "${analysis_tool}" == cover* ]]; then
+          if [[ "$(cat tool_err)" == *"## Contract violation detected! ##"* ]]; then echo "REPORT" &gt; tool_parsed; exit 0; fi
+          if [[ "$(cat tool_err)" == *"Relevant location"*"not checked!"* ]]; then echo "REPORT-COVERAGE" &gt; tool_parsed; exit 0; fi
         fi
         if [[ "${analysis_tool}" == must ]] &amp;&amp; [[ "$(cat tool_err)" == *"ThreadSanitizer: data race"* ]]; then
           echo "REPORT" &gt; tool_parsed; exit 0
@@ -71,7 +76,7 @@
 
     <!-- Regex pattern -->
     <patternset name="patterns">
-      <pattern name="error_report">(OK|REPORT|TIMEOUT)</pattern>
+      <pattern name="error_report">(OK|REPORT.*|TIMEOUT)</pattern>
     </patternset>
 
     <!-- Analyse -->
