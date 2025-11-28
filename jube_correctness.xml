@@ -16,6 +16,12 @@
       <parameter name="test_name" mode="shell">
         basename "${test_path}" | cut -d. -f1 | tr -d "\n"
       </parameter>
+      <parameter name="test_expect" mode="python">
+        "ERR" if "yes" in "${test_name}" or "Correct" in "${test_name}" else "OK"
+      </parameter>
+      <parameter name="test_origin" mode="python">
+        "${test_path}".replace("${jube_benchmark_home}/Correctness_Sources/","").replace("/${test_name}.c", "")
+      </parameter>
     </parameterset>
     <parameterset name="param_correxec">
       <parameter name="analysis_tool" mode="python">
@@ -42,8 +48,10 @@
       <use>param_environment</use>
       <use>param_correxec</use>
       <do>
-        if [ "${analysis_tool}" == "cover-static" ]; then
+        if [[ "${analysis_tool}" == "cover-static" ]]; then
           cat compile_test/stderr &gt; tool_err
+        elif [[ "${analysis_tool}" == "must" ]] &amp;&amp; [[ "${test_name}" == *shmem* ]]; then
+          touch tool_err <!-- Do not run MUST on shmem tests, there's no point. -->
         else
           ${MODULE_LOAD}
           ${runner} -np 2 compile_test/test.exe 2&gt; tool_err
@@ -74,9 +82,10 @@
     <result>
       <use>analyse</use>
       <table name="result" style="pretty" sort="proxy_app,tool">
+        <column title="Test Origin">test_origin</column>
         <column title="Test Case">test_name</column>
+        <column title="Expect">test_expect</column>
         <column title="Tool">analysis_tool</column>
-        <column title="Expect">time_min</column>
         <column title="Result">error_report</column>
       </table>
     </result>
