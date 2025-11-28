@@ -27,8 +27,8 @@
         module load gcc/11.4 ompi/5 java sos_ompi
         spack load llvm@main
       </parameter>
-      <parameter name="builds_folder" tag="!ompi">${jube_benchmark_home}/builds/mpich</parameter>
-      <parameter name="builds_folder" tag="ompi">${jube_benchmark_home}/builds/ompi</parameter>
+      <parameter name="builds_folder" tag="!ompi">${jube_benchmark_home}/Tool_Builds/mpich</parameter>
+      <parameter name="builds_folder" tag="ompi">${jube_benchmark_home}/Tool_Builds/ompi</parameter>
       <parameter name="MUST_DISABLE_TSAN_ONREPORT" export="true">1</parameter>
       <parameter name="TSAN_OPTIONS" export="true">log_path=stderr</parameter>
     </parameterset>
