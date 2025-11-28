@@ -15,20 +15,20 @@
       <parameter name="UCX_MEM_MMAP_HOOK_MODE" export="true">none</parameter>
       <parameter name="OMPI_MCA_memory" export="true">^patcher</parameter>
       <parameter name="OMPI_MCA_coll" export="true">^hcoll</parameter>
-      <parameter name="MODULE_LOAD" tag="!ompi">
+      <parameter name="MODULE_LOAD" tag="mpich">
         module purge
         module use /home/yo30qaqy/modules
         module load gcc/11.4 mpich/5 java sos_mpich
         spack load llvm@main
       </parameter>
-      <parameter name="MODULE_LOAD" tag="ompi">
+      <parameter name="MODULE_LOAD" tag="!mpich">
         module purge
         module use /home/yo30qaqy/modules
         module load gcc/11.4 ompi/5 java sos_ompi
         spack load llvm@main
       </parameter>
-      <parameter name="builds_folder" tag="!ompi">${jube_benchmark_home}/Tool_Builds/mpich</parameter>
-      <parameter name="builds_folder" tag="ompi">${jube_benchmark_home}/Tool_Builds/ompi</parameter>
+      <parameter name="builds_folder" tag="mpich">${jube_benchmark_home}/Tool_Builds/mpich</parameter>
+      <parameter name="builds_folder" tag="!mpich">${jube_benchmark_home}/Tool_Builds/ompi</parameter>
       <parameter name="MUST_DISABLE_TSAN_ONREPORT" export="true">1</parameter>
       <parameter name="TSAN_OPTIONS" export="true">log_path=stderr</parameter>
     </parameterset>
