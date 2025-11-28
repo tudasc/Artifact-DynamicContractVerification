@@ -1,5 +1,5 @@
 <jube>
-  <benchmark name="CoVerDynamicPerfBench" outpath="results_correctness_raw">
+  <benchmark name="CoVerDynamicCorrBench" outpath="results_correctness_raw">
     <comment>Runs RMARaceBench and MPI-BugBench tests to measure classification quality</comment>
 
     <!-- Generic Setup -->
@@ -54,7 +54,10 @@
           touch tool_err <!-- Do not run MUST on shmem tests, there's no point. -->
         else
           ${MODULE_LOAD}
-          ${runner} -np 2 compile_test/test.exe 2&gt; tool_err
+          timeout 60 ${runner} -np 2 compile_test/test.exe 2&gt; tool_err
+        fi
+        if [[ $? == 124 ]]; then <!-- Check for timeout -->
+          echo "TIMEOUT" &gt; tool_parsed; exit 0
         fi
         if [[ "${analysis_tool}" == cover* ]] &amp;&amp; [[ "$(cat tool_err)" == *"## Contract violation detected! ##"* ]]; then
           echo "REPORT" &gt; tool_parsed; exit 0
@@ -68,7 +71,7 @@
 
     <!-- Regex pattern -->
     <patternset name="patterns">
-      <pattern name="error_report">(OK|REPORT)</pattern>
+      <pattern name="error_report">(OK|REPORT|TIMEOUT)</pattern>
     </patternset>
 
     <!-- Analyse -->
