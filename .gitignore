@@ -1,3 +1,6 @@
 results_performance_raw/
+results_correctness_raw/
 venv/
 build*/
+Tool_Builds/
+bench_data/submit*
