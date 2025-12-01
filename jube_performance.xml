@@ -15,11 +15,26 @@
           "tealeaf": "",
         }["${proxy_app}"]
       </parameter>
+    </parameterset>
+
+    <parameterset name="param_exec">
+      <parameter name="num_nodes" tag="!submit">1</parameter>
+      <parameter name="num_nodes" tag="submit">1,2,4</parameter>
       <parameter name="nprocs" mode="python">
         {
-          "lulesh": "27",
-          "stencil": "48",
-          "tealeaf": "48",
+          "lulesh": str((2+${num_nodes})**3),
+          "stencil": str(${num_nodes}*48),
+          "tealeaf": str(${num_nodes}*48),
+        }["${proxy_app}"]
+      </parameter>
+      <parameter name="exec_internal">${runner} -np ${nprocs} ./compile_${proxy_app}/${proxy_app}_${tool} ${proxy_params} &gt; proxy_out</parameter>
+      <parameter name="exec_actual" tag="!submit">./submit.job</parameter>
+      <parameter name="exec_actual" tag="submit">sbatch submit.job</parameter>
+      <parameter name="postprocess" mode="python">
+        {
+          "lulesh": "cat proxy_out | grep 'Elapsed time' | sed -r 's/Elapsed time\\s*=\\s*(.*)\\s*\\(s\\)/\\1/' &gt; time_parsed; touch bench_done",
+          "stencil": "cat proxy_out | grep 'Total time' | sed -r 's/.*Total time\\s*\\(s\\):\\s*(.*)/\\1/' &gt; time_parsed; touch bench_done",
+          "tealeaf": "cat proxy_out | grep Wallclock | tail -1 | sed -r 's/Wallclock:\\s*(.*)s/\\1/' &gt; time_parsed; touch bench_done",
         }["${proxy_app}"]
       </parameter>
     </parameterset>
@@ -72,20 +87,31 @@
       </do>
     </step>
 
+    <substituteset name="substituteset_platform">
+      <!-- Substitute files -->
+      <iofile in="${jube_benchmark_home}/bench_data/submit.job.in" out="submit.job" />
+      <!-- Substitute commands -->
+      <sub source="#BENCHNAME#" dest="CoVerPerf_${proxy_app}_${nprocs}" />
+      <sub source="#NUM_PROCS#" dest="${nprocs}" />
+      <sub source="#NODES#" dest="${num_nodes}" />
+      <sub source="#TIME_LIMIT#" dest="01:00:00" />
+      <sub source="#STDOUTLOGFILE#" dest="job.out" />
+      <sub source="#STDERRLOGFILE#" dest="job.err" />
+      <sub source="#ENV#" dest="${jube_wp_envstr}" />
+      <sub source="#MODULES#" dest="${MODULE_LOAD}" />
+      <sub source="#EXEC_CMD#" dest="${exec_internal}" />
+      <sub source="#POSTPROCESS#" dest="${postprocess}" />
+    </substituteset>
+
     <step name="run_proxy_app" depend="compile_lulesh,compile_stencil,compile_tealeaf" suffix="${proxy_app}_${tool}" iterations="1">
       <use>param_environment</use>
       <use>param_proxyapp</use>
+      <use>param_exec</use>
+      <use>substituteset_platform</use>
       <do>
-        ${MODULE_LOAD}
         cp ${jube_benchmark_home}/bench_data/tea.{in,problems} .
-        ${runner} -np ${nprocs} ./compile_${proxy_app}/${proxy_app}_${tool} ${proxy_params} &gt; proxy_out
-        if [ "${proxy_app}" == "lulesh" ]; then
-          cat proxy_out | grep "Elapsed time" | sed -r 's/Elapsed time\s*=\s*(.*)\s*\(s\)/\1/' &gt; time_parsed
-        elif [ "${proxy_app}" == "stencil" ]; then
-          cat proxy_out | grep "Total time" | sed -r 's/.*Total time\s*\(s\):\s*(.*)/\1/' &gt; time_parsed
-        elif [ "${proxy_app}" == "tealeaf" ]; then
-          cat proxy_out | grep Wallclock | tail -1 | sed -r 's/Wallclock:\s*(.*)s/\1/' &gt; time_parsed
-        fi
+        chmod +x submit.job
+        ${exec_actual}
       </do>
     </step>
 

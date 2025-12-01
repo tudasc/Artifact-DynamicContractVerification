@@ -60,7 +60,7 @@
         {
           "base": "mpiexec",
           "tsan": "mpiexec",
-          "must": "${builds_folder}/MUST_Install/bin/mustrun --must:tsan --must:rma-race --must:output stdout --must:errorcode 0",
+          "must": "${builds_folder}/MUST_Install/bin/mustrun --must:distributed --must:tsan --must:rma-race --must:output stdout --must:errorcode 0",
           "cover": "mpiexec",
           "cover_filtered": "mpiexec",
         }["${tool}"]
