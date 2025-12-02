@@ -18,6 +18,7 @@
     </parameterset>
 
     <parameterset name="param_exec">
+      <parameter name="project_id">project02559</parameter>
       <parameter name="num_nodes" tag="!submit">1</parameter>
       <parameter name="num_nodes" tag="submit">1,2,4</parameter>
       <parameter name="nprocs" mode="python">
@@ -27,7 +28,7 @@
           "tealeaf": str(${num_nodes}*48),
         }["${proxy_app}"]
       </parameter>
-      <parameter name="exec_internal">${runner} -np ${nprocs} ./compile_${proxy_app}/${proxy_app}_${tool} ${proxy_params} &gt; proxy_out</parameter>
+      <parameter name="exec_cmd">${runner} -n ${nprocs} ./compile_${proxy_app}/${proxy_app}_${tool} ${proxy_params} &gt; proxy_out</parameter>
       <parameter name="exec_actual" tag="!submit">./submit.job</parameter>
       <parameter name="exec_actual" tag="submit">sbatch submit.job</parameter>
       <parameter name="postprocess" mode="python">
@@ -92,6 +93,7 @@
       <iofile in="${jube_benchmark_home}/bench_data/submit.job.in" out="submit.job" />
       <!-- Substitute commands -->
       <sub source="#BENCHNAME#" dest="CoVerPerf_${proxy_app}_${nprocs}" />
+      <sub source="#PROJECT_ID#" dest="${project_id}" />
       <sub source="#NUM_PROCS#" dest="${nprocs}" />
       <sub source="#NODES#" dest="${num_nodes}" />
       <sub source="#TIME_LIMIT#" dest="01:00:00" />
@@ -99,7 +101,7 @@
       <sub source="#STDERRLOGFILE#" dest="job.err" />
       <sub source="#ENV#" dest="${jube_wp_envstr}" />
       <sub source="#MODULES#" dest="${MODULE_LOAD}" />
-      <sub source="#EXEC_CMD#" dest="${exec_internal}" />
+      <sub source="#EXEC_CMD#" dest="${exec_cmd}" />
       <sub source="#POSTPROCESS#" dest="${postprocess}" />
     </substituteset>
 
