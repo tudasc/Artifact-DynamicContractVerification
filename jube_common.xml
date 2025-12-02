@@ -18,13 +18,13 @@
       <parameter name="MODULE_LOAD" tag="mpich">
         module purge
         module use /home/yo30qaqy/modules
-        module load gcc/11.4 mpich/5 java sos_mpich
+        module load cmake gcc/11.4 mpich/5 java sos_mpich
         spack load llvm@main
       </parameter>
       <parameter name="MODULE_LOAD" tag="!mpich">
         module purge
         module use /home/yo30qaqy/modules
-        module load gcc/11.4 ompi/5 java sos_ompi
+        module load cmake gcc/11.4 ompi/5 java sos_ompi
         spack load llvm@main
       </parameter>
       <parameter name="builds_folder" tag="mpich">${jube_benchmark_home}/Tool_Builds/mpich</parameter>
@@ -56,13 +56,15 @@
           "cover_filtered": "${builds_folder}/CoVer_Install/bin/clangContracts --wrap-target ${def_wrapper_c} --predefined-contracts --instrument-contracts=filtered",
         }["${tool}"]
       </parameter>
+      <parameter name="base_runner" tag="!submit">mpiexec</parameter>
+      <parameter name="base_runner" tag="submit">srun</parameter>
       <parameter name="runner" mode="python">
         {
-          "base": "mpiexec",
-          "tsan": "mpiexec",
-          "must": "${builds_folder}/MUST_Install/bin/mustrun --must:distributed --must:tsan --must:rma-race --must:output stdout --must:errorcode 0",
-          "cover": "mpiexec",
-          "cover_filtered": "mpiexec",
+          "base": "${base_runner}",
+          "tsan": "${base_runner}",
+          "must": "${builds_folder}/MUST_Install/bin/mustrun --must:distributed --must:nodl --must:tsan --must:rma-race --must:output stdout --must:errorcode 0 --must:mpiexec ${base_runner}",
+          "cover": "${base_runner}",
+          "cover_filtered": "${base_runner}",
         }["${tool}"]
       </parameter>
     </parameterset>
