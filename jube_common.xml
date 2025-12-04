@@ -25,7 +25,7 @@
         module purge
         module use /home/yo30qaqy/modules
         module load cmake gcc/11.4 ompi/5 java sos_ompi
-        spack load llvm@main
+        spack load llvm@main/2zfa3m7
       </parameter>
       <parameter name="builds_folder" tag="mpich">${jube_benchmark_home}/Tool_Builds/mpich</parameter>
       <parameter name="builds_folder" tag="!mpich">${jube_benchmark_home}/Tool_Builds/ompi</parameter>
