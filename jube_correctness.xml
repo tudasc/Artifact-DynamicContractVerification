@@ -8,10 +8,10 @@
 
     <parameterset name="param_correctness" duplicate="concat" >
       <parameter name="test_path" mode="shell" tag="RRB"> <!-- RMARaceBench -->
-        find ${jube_benchmark_home}/Correctness_Sources/RMARaceBench -type f -name "*local*" | paste -s -d ","
+        find ${jube_benchmark_home}/Correctness_Sources/RMARaceBench -type f | paste -s -d ","
       </parameter>
       <parameter name="test_path" mode="shell" tag="MBB"> <!-- MPI-BugBench -->
-        find ${jube_benchmark_home}/Correctness_Sources/MPI-BugBench -type f -name "*local*" | paste -s -d ","
+        find ${jube_benchmark_home}/Correctness_Sources/MPI-BugBench -type f | paste -s -d ","
       </parameter>
       <parameter name="test_name" mode="shell">
         basename "${test_path}" | cut -d. -f1 | tr -d "\n"
@@ -55,19 +55,19 @@
         else
           ${MODULE_LOAD}
           timeout 60 ${runner} -np 2 compile_test/test.exe 2&gt; tool_err
+          if [[ $? == 124 ]]; then <!-- Check for timeout -->
+            echo "TIMEOUT" &gt; tool_parsed; exit 0
+          fi
           if [[ "${analysis_tool}" == cover ]]; then
             <!-- CoVer "runs again" to parse the coverage info -->
             compile_test/test.exe --cover:check-coverage 2&gt;&gt; tool_err
           fi
         fi
-        if [[ $? == 124 ]]; then <!-- Check for timeout -->
-          echo "TIMEOUT" &gt; tool_parsed; exit 0
-        fi
         if [[ "${analysis_tool}" == cover* ]]; then
           if [[ "$(cat tool_err)" == *"## Contract violation detected! ##"* ]]; then echo "REPORT" &gt; tool_parsed; exit 0; fi
           if [[ "$(cat tool_err)" == *"Relevant location"*"not checked!"* ]]; then echo "REPORT-COVERAGE" &gt; tool_parsed; exit 0; fi
         fi
-        if [[ "${analysis_tool}" == must ]] &amp;&amp; [[ "$(cat tool_err)" == *"ThreadSanitizer: data race"* ]]; then
+        if [[ "${analysis_tool}" == must ]] &amp;&amp; [[ "$(cat tool_err)" == *@("ThreadSanitizer: data race"|"MUST-REPORT")* ]]; then
           echo "REPORT" &gt; tool_parsed; exit 0
         fi
         echo "OK" &gt; tool_parsed 
