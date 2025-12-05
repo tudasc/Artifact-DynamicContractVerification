@@ -54,9 +54,9 @@
           touch tool_err <!-- Do not run MUST on shmem tests, there's no point. -->
         else
           ${MODULE_LOAD}
-          timeout 60 ${runner} -np 2 compile_test/test.exe 2&gt; tool_err
+          timeout 30 ${runner} -np 2 compile_test/test.exe &amp;&gt; tool_err
           if [[ $? == 124 ]]; then <!-- Check for timeout -->
-            echo "TIMEOUT" &gt; tool_parsed; exit 0
+            touch possible_timeout
           fi
           if [[ "${analysis_tool}" == cover ]]; then
             <!-- CoVer "runs again" to parse the coverage info -->
@@ -70,7 +70,11 @@
         if [[ "${analysis_tool}" == must ]] &amp;&amp; [[ "$(cat tool_err)" == *@("ThreadSanitizer: data race"|"MUST-REPORT")* ]]; then
           echo "REPORT" &gt; tool_parsed; exit 0
         fi
-        echo "OK" &gt; tool_parsed 
+        if [[ -f possible_timeout ]]; then
+          echo "TIMEOUT" &gt; tool_parsed
+        else
+          echo "OK" &gt; tool_parsed
+        fi 
       </do>
     </step>
 
