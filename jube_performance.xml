@@ -110,7 +110,7 @@
       <use>param_proxyapp</use>
       <use>param_exec</use>
       <use>substituteset_platform</use>
-      <do>
+      <do done_file="bench_done">
         cp ${jube_benchmark_home}/bench_data/tea.{in,problems} .
         chmod +x submit.job
         ${exec_actual}
