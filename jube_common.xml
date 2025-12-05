@@ -24,8 +24,8 @@
       <parameter name="MODULE_LOAD" tag="!mpich">
         module purge
         module use /home/yo30qaqy/modules
-        module load cmake gcc/11.4 ompi/5 java sos_ompi
-        spack load llvm@main/2zfa3m7
+        module load cmake gcc/11.4 java sos_ompi
+        spack load llvm@main/2zfa3m7 openmpi@5.0.5/lhjdzvf
       </parameter>
       <parameter name="builds_folder" tag="mpich">${jube_benchmark_home}/Tool_Builds/mpich</parameter>
       <parameter name="builds_folder" tag="!mpich">${jube_benchmark_home}/Tool_Builds/ompi</parameter>
@@ -62,7 +62,7 @@
         {
           "base": "${base_runner}",
           "tsan": "${base_runner}",
-          "must": "${builds_folder}/MUST_Install/bin/mustrun --must:distributed --must:nodl --must:tsan --must:rma-race --must:output stdout --must:errorcode 0 --must:mpiexec ${base_runner}",
+          "must": "${builds_folder}/MUST_Install/bin/mustrun --must:distributed --must:tsan --must:rma-race --must:output stdout --must:errorcode 0 --must:mpiexec ${base_runner}",
           "cover": "${base_runner}",
           "cover_filtered": "${base_runner}",
         }["${tool}"]
