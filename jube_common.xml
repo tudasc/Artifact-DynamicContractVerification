@@ -13,22 +13,16 @@
       <parameter name="SHMEM_CXX" export="true">clang++</parameter>
       <parameter name="PMIX_MCA_gds" export="true">hash</parameter>
       <parameter name="UCX_MEM_MMAP_HOOK_MODE" export="true">none</parameter>
+      <parameter name="PMIX_MCA_psec" export="true">^munge</parameter>
       <parameter name="OMPI_MCA_memory" export="true">^patcher</parameter>
-      <parameter name="OMPI_MCA_coll" export="true">^hcoll</parameter>
-      <parameter name="MODULE_LOAD" tag="mpich">
+      <parameter name="MODULE_LOAD">
         module purge
+        module load cmake gcc/11.4
+        spack load llvm@main/2zfa3m7 openmpi@5.0.5/jvkspfx
         module use /home/yo30qaqy/modules
-        module load cmake gcc/11.4 mpich/5 java sos_mpich
-        spack load llvm@main
+        module load java sos_ompi
       </parameter>
-      <parameter name="MODULE_LOAD" tag="!mpich">
-        module purge
-        module use /home/yo30qaqy/modules
-        module load cmake gcc/11.4 java sos_ompi
-        spack load llvm@main/2zfa3m7 openmpi@5.0.5/lhjdzvf
-      </parameter>
-      <parameter name="builds_folder" tag="mpich">${jube_benchmark_home}/Tool_Builds/mpich</parameter>
-      <parameter name="builds_folder" tag="!mpich">${jube_benchmark_home}/Tool_Builds/ompi</parameter>
+      <parameter name="builds_folder">${jube_benchmark_home}/Tool_Builds/ompi</parameter>
       <parameter name="MUST_DISABLE_TSAN_ONREPORT" export="true">1</parameter>
       <parameter name="TSAN_OPTIONS" export="true">log_path=stderr</parameter>
     </parameterset>
@@ -57,7 +51,7 @@
         }["${tool}"]
       </parameter>
       <parameter name="base_runner" tag="!submit">mpiexec</parameter>
-      <parameter name="base_runner" tag="submit">srun</parameter>
+      <parameter name="base_runner" tag="submit">srun --mpi=pmix</parameter>
       <parameter name="runner" mode="python">
         {
           "base": "${base_runner}",
