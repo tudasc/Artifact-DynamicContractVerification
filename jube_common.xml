@@ -17,8 +17,8 @@
       <parameter name="OMPI_MCA_memory" export="true">^patcher</parameter>
       <parameter name="MODULE_LOAD">
         module purge
-        module load cmake gcc/11.4
-        spack load llvm@main/2zfa3m7 openmpi@5.0.5/jvkspfx
+        module load cmake gcc/12
+        spack load llvm@main/7zrot4i openmpi@5.0.5/jvkspfx
         module use /home/yo30qaqy/modules
         module load java sos_ompi
       </parameter>
