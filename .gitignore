@@ -3,4 +3,3 @@ results_correctness_raw/
 venv/
 build*/
 Tool_Builds/
-bench_data/submit*
