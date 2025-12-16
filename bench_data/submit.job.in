@@ -7,7 +7,6 @@
 #SBATCH --time=#TIME_LIMIT#
 #SBATCH --output=#STDOUTLOGFILE#
 #SBATCH --error=#STDERRLOGFILE#
-#SBATCH --overcommit
 
 #MODULES#
 

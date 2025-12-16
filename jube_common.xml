@@ -13,26 +13,19 @@
       <parameter name="SHMEM_CXX" export="true">clang++</parameter>
       <parameter name="PMIX_MCA_gds" export="true">hash</parameter>
       <parameter name="UCX_MEM_MMAP_HOOK_MODE" export="true">none</parameter>
-      <parameter name="PMIX_MCA_psec" export="true">^munge</parameter>
       <parameter name="OMPI_MCA_memory" export="true">^patcher</parameter>
-      <parameter name="MODULE_LOAD" tag="ompi4">
+      <parameter name="MODULE_CLEANUP">
         module purge
         spack unload --all
-        module load cmake gcc/12
-        spack load llvm@main/7zrot4i openmpi@4.1.6
         module use /home/yo30qaqy/modules
+      </parameter>
+      <parameter name="MODULE_LOAD">
+        ${MODULE_CLEANUP}
+
+        spack load cmake@3.30.5/df4r5i6 llvm@main/2zfa3m7 openmpi@5.0.5/jvkspfx
         module load java sos_ompi
       </parameter>
-      <parameter name="MODULE_LOAD" tag="!ompi4">
-        module purge
-        spack unload --all
-        module load cmake gcc/12
-        spack load llvm@main/7zrot4i openmpi@5.0.5/jvkspfx
-        module use /home/yo30qaqy/modules
-        module load java sos_ompi
-      </parameter>
-      <parameter name="builds_folder" tag="!ompi4">${jube_benchmark_home}/Tool_Builds/ompi5</parameter>
-      <parameter name="builds_folder" tag="ompi4">${jube_benchmark_home}/Tool_Builds/ompi4</parameter>
+      <parameter name="builds_folder">${jube_benchmark_home}/Tool_Builds/ompi</parameter>
       <parameter name="MUST_DISABLE_TSAN_ONREPORT" export="true">1</parameter>
       <parameter name="TSAN_OPTIONS" export="true">log_path=stderr</parameter>
     </parameterset>
@@ -61,12 +54,12 @@
         }["${tool}"]
       </parameter>
       <parameter name="base_runner" tag="!submit">mpiexec</parameter>
-      <parameter name="base_runner" tag="submit">srun --mpi=pmix</parameter>
+      <parameter name="base_runner" tag="submit">srun --mpi=pmix --overcommit</parameter>
       <parameter name="runner" mode="python">
         {
           "base": "${base_runner}",
           "tsan": "${base_runner}",
-          "must": "${builds_folder}/MUST_Install/bin/mustrun --must:distributed --must:tsan --must:rma-race --must:output stdout --must:errorcode 0 --must:mpiexec ${base_runner}",
+          "must": "${builds_folder}/MUST_Install/bin/mustrun --must:distributed --must:tsan --must:rma-race --must:output stdout --must:errorcode 0 --must:mpiexec \"${base_runner}\"",
           "cover": "${base_runner}",
           "cover_filtered": "${base_runner}",
         }["${tool}"]
@@ -74,16 +67,16 @@
     </parameterset>
     <step name="compile_cover">
       <use>param_environment</use>
-      <do>
+      <do tag="cover">
         ${MODULE_LOAD}
         cmake -S ${jube_benchmark_home}/Tool_Sources/CoVer -B ${builds_folder}/CoVer_Build -DCMAKE_INSTALL_PREFIX=${builds_folder}/CoVer_Install -DCMAKE_BUILD_TYPE=Release -DSHMEM_HEADER_PATH=${jube_benchmark_home}/bench_data/shmem.h
         cmake --build ${builds_folder}/CoVer_Build --target install -j 32
       </do>
     </step>
 
-    <step name="compile_must" tag="must">
+    <step name="compile_must">
       <use>param_environment</use>
-      <do>
+      <do tag="must">
         ${MODULE_LOAD}
         if [ -d ${builds_folder}/MUST_Install ]; then
           exit 0
@@ -96,7 +89,6 @@
         cmake --build ${builds_folder}/MUST_Build --target install -j 32
       </do>
     </step>
-    <step name="tools_available" depend="compile_cover" tag="!must" />
-    <step name="tools_available" depend="compile_cover,compile_must" tag="must" />
+    <step name="tools_available" depend="compile_cover,compile_must" />
   </common_setup>
 </jube>
