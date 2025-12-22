@@ -61,6 +61,9 @@
         make clean <!-- Removes everything but the renamed executable -->
         cd ..
         mv LULESH/lulesh_${tool} .
+        if [ -e LULESH/contract_messages.json ]; then
+          mv LULESH/contract_messages.json .
+        fi
       </do>
     </step>
 
@@ -82,9 +85,12 @@
         ${MODULE_LOAD}
         mkdir build
         cd build
-        CC="${compiler_c}" CXX="${compiler_cxx}" cmake ../TeaLeaf -DCMAKE_BUILD_TYPE=Release -DMODEL=serial -DENABLE_MPI=ON
+        CC="${compiler_c} -g" CXX="${compiler_cxx} -g" cmake ../TeaLeaf -DCMAKE_BUILD_TYPE=Release -DMODEL=serial -DENABLE_MPI=ON
         cmake --build .
         mv serial-tealeaf ../tealeaf_${tool}
+        if [ -e contract_messages.json ]; then
+          mv contract_messages.json ..
+        fi
       </do>
     </step>
 
@@ -111,6 +117,9 @@
       <use>param_exec</use>
       <use>substituteset_platform</use>
       <do done_file="bench_done">
+        if [ -e ./compile_${proxy_app}/contract_messages.json ]; then
+          cp ./compile_${proxy_app}/contract_messages.json contract_messages.json
+        fi
         cp ${jube_benchmark_home}/bench_data/tea.{in,problems} .
         chmod +x submit.job
         ${exec_actual}
