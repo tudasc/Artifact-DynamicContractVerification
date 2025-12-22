@@ -3,6 +3,7 @@
 #SBATCH --account=#PROJECT_ID#
 #SBATCH --nodes=#NODES#
 #SBATCH --ntasks=#NUM_PROCS#
+#SBATCH --cpus-per-task=2
 #SBATCH --mem-per-cpu=2048
 #SBATCH --time=#TIME_LIMIT#
 #SBATCH --output=#STDOUTLOGFILE#

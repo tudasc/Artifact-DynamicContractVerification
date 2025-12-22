@@ -7,3 +7,6 @@
 [submodule "TeaLeaf"]
 	path = Performance_Sources/TeaLeaf
 	url = https://github.com/UoB-HPC/TeaLeaf
+[submodule "Tool_Sources/MUST"]
+	path = Tool_Sources/MUST
+	url = git@git-ce.rwth-aachen.de:hpc-research/correctness/MUST

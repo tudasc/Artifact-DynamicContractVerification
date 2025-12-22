@@ -132,8 +132,9 @@
 
     <result>
       <use>analyse</use>
-      <table name="result" style="pretty" sort="proxy_app,tool">
+      <table name="result" style="pretty" sort="proxy_app,nprocs,tool">
         <column title="Proxy App">proxy_app</column>
+        <column title="Processes">nprocs</column>
         <column title="Tool">tool</column>
         <column title="Time (Min)">time_min</column>
         <column title="Time (Max)">time_max</column>

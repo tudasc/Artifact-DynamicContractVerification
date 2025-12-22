@@ -12,6 +12,7 @@
       <parameter name="OSHMEM_CXX" export="true">clang++</parameter>
       <parameter name="SHMEM_CXX" export="true">clang++</parameter>
       <parameter name="PMIX_MCA_gds" export="true">hash</parameter>
+      <parameter name="PMIX_MCA_psec" export="true">^munge</parameter>
       <parameter name="UCX_MEM_MMAP_HOOK_MODE" export="true">none</parameter>
       <parameter name="OMPI_MCA_memory" export="true">^patcher</parameter>
       <parameter name="MODULE_CLEANUP">
@@ -19,13 +20,22 @@
         spack unload --all
         module use /home/yo30qaqy/modules
       </parameter>
-      <parameter name="MODULE_LOAD">
+      <parameter name="MODULE_LOAD" tag="ompi4">
+        echo "Loading ompi4 packages"
+        ${MODULE_CLEANUP}
+
+        spack load cmake@3.30.5/df4r5i6 llvm@main/2zfa3m7 openmpi@4.1.6/u4axpq2
+        module load java sos_ompi
+      </parameter>
+      <parameter name="MODULE_LOAD" tag="!ompi4">
+        echo "Loading ompi5 packages"
         ${MODULE_CLEANUP}
 
         spack load cmake@3.30.5/df4r5i6 llvm@main/2zfa3m7 openmpi@5.0.5/jvkspfx
         module load java sos_ompi
       </parameter>
-      <parameter name="builds_folder">${jube_benchmark_home}/Tool_Builds/ompi</parameter>
+      <parameter name="builds_folder" tag="ompi4">${jube_benchmark_home}/Tool_Builds/ompi4</parameter>
+      <parameter name="builds_folder" tag="!ompi4">${jube_benchmark_home}/Tool_Builds/ompi5</parameter>
       <parameter name="MUST_DISABLE_TSAN_ONREPORT" export="true">1</parameter>
       <parameter name="TSAN_OPTIONS" export="true">log_path=stderr</parameter>
     </parameterset>
@@ -33,6 +43,7 @@
       <parameter name="tool" tag="base">base</parameter>
       <parameter name="tool" tag="must">must</parameter>
       <parameter name="tool" tag="cover">cover</parameter>
+      <parameter name="tool" tag="cover_filtered">cover_filtered</parameter>
       <parameter name="def_wrapper_c">oshcc -lmpi</parameter>
       <parameter name="def_wrapper_cxx">oshc++ -lmpi</parameter>
       <parameter name="compiler_cxx" mode="python">
@@ -67,7 +78,7 @@
     </parameterset>
     <step name="compile_cover">
       <use>param_environment</use>
-      <do tag="cover">
+      <do tag="cover|cover_filtered">
         ${MODULE_LOAD}
         cmake -S ${jube_benchmark_home}/Tool_Sources/CoVer -B ${builds_folder}/CoVer_Build -DCMAKE_INSTALL_PREFIX=${builds_folder}/CoVer_Install -DCMAKE_BUILD_TYPE=Release -DSHMEM_HEADER_PATH=${jube_benchmark_home}/bench_data/shmem.h
         cmake --build ${builds_folder}/CoVer_Build --target install -j 32
@@ -76,16 +87,12 @@
 
     <step name="compile_must">
       <use>param_environment</use>
-      <do tag="must">
+      <do tag="must|must_filtered">
         ${MODULE_LOAD}
         if [ -d ${builds_folder}/MUST_Install ]; then
           exit 0
         fi
-        mkdir -p ${builds_folder}/MUST_Source
-        tar xvf ${jube_benchmark_home}/Tool_Sources/MUST-v1.11.2.tar.gz --strip-components=1 -C ${builds_folder}/MUST_Source
-        patch -p1 --directory=${builds_folder}/MUST_Source &lt; ${jube_benchmark_home}/bench_data/425.patch
-        sed 's/symbolize=0/symbolize=1/' -i ${builds_folder}/MUST_Source/utility/mustrun2.sh
-        cmake -S ${builds_folder}/MUST_Source -B ${builds_folder}/MUST_Build -DCMAKE_INSTALL_PREFIX=${builds_folder}/MUST_Install -DCMAKE_BUILD_TYPE=Release -DENABLE_FORTRAN=OFF -DENABLE_TSAN=ON -DUSE_BACKWARD=OFF
+        cmake -S ${jube_benchmark_home}/Tool_Sources/MUST -B ${builds_folder}/MUST_Build -DCMAKE_INSTALL_PREFIX=${builds_folder}/MUST_Install -DCMAKE_BUILD_TYPE=Release -DENABLE_FORTRAN=OFF -DENABLE_TSAN=ON -DUSE_BACKWARD=ON
         cmake --build ${builds_folder}/MUST_Build --target install -j 32
       </do>
     </step>
