@@ -20,7 +20,12 @@
     <parameterset name="param_exec">
       <parameter name="project_id">project02559</parameter>
       <parameter name="num_nodes" tag="!submit">1</parameter>
-      <parameter name="num_nodes" tag="submit">1,2,4</parameter>
+      <parameter name="num_nodes" tag="submit" mode="python">
+        {
+          "lulesh": "1,2,3",
+          "stencil": "1,2,4",
+          "tealeaf": "1,2,4",
+        }["${proxy_app}"]</parameter>
       <parameter name="nprocs" mode="python">
         {
           "lulesh": str((2+${num_nodes})**3),
