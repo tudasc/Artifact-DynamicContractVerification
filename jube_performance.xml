@@ -111,7 +111,7 @@
       <sub source="#POSTPROCESS#" dest="${postprocess}" />
     </substituteset>
 
-    <step name="run_proxy_app" depend="compile_lulesh,compile_stencil,compile_tealeaf" suffix="${proxy_app}_${tool}" iterations="1">
+    <step name="run_proxy_app" depend="compile_lulesh,compile_stencil,compile_tealeaf" suffix="${proxy_app}_${tool}" iterations="5">
       <use>param_environment</use>
       <use>param_proxyapp</use>
       <use>param_exec</use>
