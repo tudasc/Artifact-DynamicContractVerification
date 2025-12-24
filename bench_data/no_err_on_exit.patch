@@ -1,0 +1,13 @@
+diff --git a/modules/MustBase/MsgLoggerStdOut.cpp b/modules/MustBase/MsgLoggerStdOut.cpp
+index 43c879d62..3bf98c021 100644
+--- a/modules/MustBase/MsgLoggerStdOut.cpp
++++ b/modules/MustBase/MsgLoggerStdOut.cpp
+@@ -50,7 +50,7 @@ MsgLoggerStdOut::MsgLoggerStdOut(const char* instanceName)
+ MsgLoggerStdOut::~MsgLoggerStdOut(void)
+ {
+     if (myErrorCode <= MustInformationMessage) {
+-        must::PrefixedOstream pcout{MUST_STDOUT_PREFIX_REPORT, std::cout};
++        must::PrefixedOstream pcout{MUST_STDOUT_PREFIX_RUNTIME, std::cout};
+         pcout << "MUST detected no MPI usage errors nor any "
+                  "suspicious behavior during this application run."
+               << std::endl;

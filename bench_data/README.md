@@ -5,3 +5,5 @@
 - shmem.h: Copy of the Sandia OpenSHMEM 1.5.3 header.
   - Included to avoid hardcoding the header path to a system directory for CoVer, as no CMake configure file for OpenSHMEM exists to allow for dynamic discovery (e.g. FindMPI).
 - 425.patch: Compilation fix for MUST when disabling backward (needed for simultaneous p2p and rma race detection)
+- no_err_on_exit.patch: MUST ordinarily prefixes error reports AND "no errors to report" with MUST-REPORT. For easier parsing, this patch modifies the prefix of the latter.
+- must_filtered_compiler.sh: A compiler wrapper that runs CoVer to generate a detection report JSON, then the MUST compiler wrapper using that json for filtered instrumentation

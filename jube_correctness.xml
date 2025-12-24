@@ -28,6 +28,7 @@
         {
           "base": "base",
           "must": "must",
+          "must_filtered": "must",
           "cover": "cover,cover-static",
           "cover_filtered": "cover",
         }["${tool}"]
@@ -48,6 +49,9 @@
       <use>param_environment</use>
       <use>param_correxec</use>
       <do>
+        if [ -e ./compile_test/contract_messages.json ]; then
+          cp ./compile_test/contract_messages.json .
+        fi
         if [[ "${analysis_tool}" == "cover-static" ]]; then
           cat compile_test/stderr &gt; tool_err
         elif [[ "${analysis_tool}" == "must" ]] &amp;&amp; [[ "${test_name}" == *shmem* ]]; then
@@ -67,8 +71,9 @@
           if [[ "$(cat tool_err)" == *"## Contract violation detected! ##"* ]]; then echo "REPORT" &gt; tool_parsed; exit 0; fi
           if [[ "$(cat tool_err)" == *"Relevant location"*"not checked!"* ]]; then echo "REPORT-COVERAGE" &gt; tool_parsed; exit 0; fi
         fi
-        if [[ "${analysis_tool}" == must ]] &amp;&amp; [[ "$(cat tool_err)" == *@("ThreadSanitizer: data race"|"MUST-REPORT")* ]]; then
-          echo "REPORT" &gt; tool_parsed; exit 0
+        if [[ "${analysis_tool}" == must* ]]; then
+          if [[ "$(cat tool_err)" == *"Non-covered location"* ]]; then echo "REPORT-COVERAGE" &gt; tool_parsed; exit 0; fi
+          if [[ "$(cat tool_err)" == *@("ThreadSanitizer: data race"|"MUST-REPORT")* ]]; then echo "REPORT" &gt; tool_parsed; exit 0; fi
         fi
         if [[ -f possible_timeout ]]; then
           echo "TIMEOUT" &gt; tool_parsed
