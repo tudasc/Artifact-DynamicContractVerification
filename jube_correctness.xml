@@ -17,7 +17,7 @@
         basename "${test_path}" | cut -d. -f1 | tr -d "\n"
       </parameter>
       <parameter name="test_expect" mode="python">
-        "ERR" if "yes" in "${test_name}" or "Correct" in "${test_name}" else "OK"
+        "OK" if "no" in "${test_name}" or "Correct" in "${test_name}" else "ERR"
       </parameter>
       <parameter name="test_origin" mode="python">
         "${test_path}".replace("${jube_benchmark_home}/Correctness_Sources/","").replace("/${test_name}.c", "")
@@ -28,9 +28,9 @@
         {
           "base": "base",
           "must": "must",
-          "must_filtered": "must",
+          "must_filtered": "must_filtered",
           "cover": "cover,cover-static",
-          "cover_filtered": "cover",
+          "cover_filtered": "cover_filtered",
         }["${tool}"]
       </parameter>
     </parameterset>
@@ -62,7 +62,7 @@
           if [[ $? == 124 ]]; then <!-- Check for timeout -->
             touch possible_timeout
           fi
-          if [[ "${analysis_tool}" == cover ]]; then
+          if [[ "${analysis_tool}" == cover* ]]; then
             <!-- CoVer "runs again" to parse the coverage info -->
             compile_test/test.exe --cover:check-coverage 2&gt;&gt; tool_err
           fi
