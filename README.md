@@ -4,7 +4,7 @@ To reproduce the results in the paper, the JUBE benchmarking system is required.
 Additionally, the module structure may need to be adapted to the target system.
 
 The artifact is structured as follows:
-- `archive.7z`: Contains all results used in the paper
+- `archive/`: Contains all results used in the paper
 - `jube_common.xml`: Generic Setup of CoVer, MUST and module system for both the correctness and performance benchmarks
 - `jube_performance.xml`: JUBE benchmark definitions for the performance analysis. See [the reproduction steps](#reproduction-steps---performance) on how to use it.
 - `jube_correctness.xml`: JUBE benchmark definitions for the classification quality analysis. See [the reproduction steps](#reproduction-steps---correctness) on how to use it.
