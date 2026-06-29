@@ -1,0 +1,25 @@
+# This is a Spack Environment file.
+#
+# It describes a set of packages to be installed, along with
+# configuration settings.
+spack:
+  config:
+    install_tree:
+      root: ~/spack_install/install
+    source_cache: ~/spack_install/cache
+  upstreams:
+    spack-instance-1:
+      install_tree: /shared/spapps_2026_01
+  specs:
+    - llvm@22
+  packages:
+    all:
+      permissions:
+        read: group
+        write: group
+        group: yo30qaqy
+    llvm:
+      buildable: true
+  view: true
+  concretizer:
+    unify: true
