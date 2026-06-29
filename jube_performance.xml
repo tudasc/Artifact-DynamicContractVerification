@@ -62,8 +62,7 @@
       <do>
         ${MODULE_LOAD}
         cd LULESH
-        make CXX="${compiler_cxx} -DUSE_MPI=1" CXXFLAGS="-g -O3 -I." LULESH_EXEC="lulesh_${tool}"
-        make clean <!-- Removes everything but the renamed executable -->
+        ${compiler_cxx} -DUSE_MPI=1 -g -O3 -o lulesh_${tool} *.cc
         cd ..
         mv LULESH/lulesh_${tool} .
         if [ -e LULESH/contract_messages.json ]; then
