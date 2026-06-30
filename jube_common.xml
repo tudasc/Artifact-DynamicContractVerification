@@ -97,7 +97,6 @@
           exit 0
         fi
         cd ${jube_benchmark_home}/Tool_Sources/MUST
-        git apply ${jube_benchmark_home}/bench_data/425.patch
         git apply ${jube_benchmark_home}/bench_data/no_err_on_exit.patch
         cmake -S ${jube_benchmark_home}/Tool_Sources/MUST -B ${builds_folder}/MUST_Build -DCMAKE_INSTALL_PREFIX=${builds_folder}/MUST_Install -DCMAKE_BUILD_TYPE=Release -DENABLE_FORTRAN=OFF -DENABLE_TSAN=ON -DUSE_BACKWARD=OFF
         cmake --build ${builds_folder}/MUST_Build --target install -j 32
