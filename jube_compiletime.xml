@@ -1,0 +1,90 @@
+<jube>
+  <benchmark name="CoVerDynamicPerfBench_Compile" outpath="results_compiletime_raw">
+    <comment>Runs multiple proxy apps to measure compile-time overhead</comment>
+
+    <!-- Generic Setup -->
+    <include from="jube_common.xml" path="common_setup/parameterset" />
+    <include from="jube_common.xml" path="common_setup/step" />
+
+    <fileset name="lulesh_src">
+      <link>Performance_Sources/LULESH/</link>
+    </fileset>
+    <fileset name="stencil_src">
+      <link>Performance_Sources/Stencil/</link>
+    </fileset>
+    <fileset name="tealeaf_src">
+      <link>Performance_Sources/TeaLeaf/</link>
+    </fileset>
+    <fileset name="miniweather_src">
+      <link>Performance_Sources/miniWeather/</link>
+    </fileset>
+
+    <parameterset name="param_proxyapp">
+      <parameter name="proxy_app">lulesh,stencil,tealeaf,miniweather</parameter>
+    </parameterset>
+    <parameterset name="param_compileargs">
+      <parameter name="cover_analysis_arg" mode="python">
+        {
+          "cover": ",--skip-static-analysis"
+        }.get("${tool}", "")
+      </parameter>
+    </parameterset>
+
+    <step name="compile" depend="tools_available" suffix="${proxy_app}_${tool}" iterations="5">
+      <use>param_proxyapp</use>
+      <use>param_environment</use>
+      <use>param_compilemode</use>
+      <use>param_compileargs</use>
+      <use>lulesh_src</use>
+      <use>stencil_src</use>
+      <use>tealeaf_src</use>
+      <use>miniweather_src</use>
+      <do>
+        ${MODULE_LOAD}
+        if [[ "$proxy_app" == "lulesh" ]]; then
+          time ${compiler_cxx} ${cover_analysis_arg} -DUSE_MPI=1 -g -O3 -o lulesh_${tool} LULESH/*.cc
+        elif [[ "$proxy_app" == "stencil" ]]; then
+          time ${compiler_c} ${cover_analysis_arg} -g -O3 -DRADIUS=1 -DSTAR=1 -DDOUBLE=1 -lm Stencil/stencil.c -o stencil_${tool}
+        elif [[ "$proxy_app" == "tealeaf" ]]; then
+          time ${compiler_cxx} ${cover_analysis_arg} -g -O3 -o tealeaf_${tool} TeaLeaf/driver/*.cpp TeaLeaf/src/serial/*.cpp -I TeaLeaf/src/serial -I TeaLeaf/driver
+        elif [[ "$proxy_app" == "miniweather" ]]; then
+          time ${compiler_cxx} -g -O3 -D_NX=150 -D_NZ=75 -D_SIM_TIME=10000 -D_OUT_FREQ=1000 -D_DATA_SPEC=DATA_SPEC_THERMAL -lm miniWeather/miniWeather_mpi.cpp -o miniWeather_${tool}
+        fi
+      </do>
+    </step>
+
+    <!-- Regex pattern -->
+    <patternset name="patterns_compiletime">
+      <pattern name="cover_parsing" type="float">CoVer: Parsed contracts after ${jube_pat_fp}s</pattern>
+      <pattern name="cover_precall" type="float">CoVer: PreCall took ${jube_pat_fp}s</pattern>
+      <pattern name="cover_postcall" type="float">CoVer: PostCall took ${jube_pat_fp}s</pattern>
+      <pattern name="cover_release" type="float">CoVer: Release took ${jube_pat_fp}s</pattern>
+      <pattern name="cover_instrumentation" type="float">CoVer: Instrumentation took ${jube_pat_fp}</pattern>
+      <pattern name="total_compilation_time" type="float">real	0m${jube_pat_fp}</pattern>
+    </patternset>
+
+    <!-- Analyse -->
+    <analyser name="analyse">
+      <use>patterns_compiletime</use>
+      <analyse step="compile">
+        <file>stderr</file>
+      </analyse>
+    </analyser>
+
+    <result>
+      <use>analyse</use>
+      <table name="result_pretty" style="pretty" sort="proxy_app,tool,cover_analysis_arg">
+        <column title="Proxy App">proxy_app</column>
+        <column title="Tool">tool</column>
+        <column title="Static Analysis Arg">cover_analysis_arg</column>
+        <column title="Contract Parsing">cover_parsing_avg</column>
+        <column title="PreCall Time">cover_precall_avg</column>
+        <column title="PostCall Time">cover_postcall_avg</column>
+        <column title="Release Time">cover_release_avg</column>
+        <column title="Instrumentation Time">cover_instrumentation_avg</column>
+        <column title="Total Time">total_compilation_time_avg</column>
+      </table>
+    </result>
+
+  </benchmark>
+</jube>
