@@ -12,13 +12,17 @@ spack:
       install_tree: /shared/spapps_2026_01
   specs:
     - llvm@22
+    - cmake@4.2.3
   packages:
     all:
       permissions:
         read: group
         write: group
         group: yo30qaqy
+    cmake:
+      prefer: ['%c,cxx=gcc@14.3.0']
     llvm:
+      prefer: ['%c,cxx=gcc@14.3.0']
       buildable: true
   view: true
   concretizer:

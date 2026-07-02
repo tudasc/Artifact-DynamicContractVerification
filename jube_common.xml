@@ -18,13 +18,15 @@
       <parameter name="MODULE_CLEANUP">
         module purge
         spack unload --all
+        despacktivate
         module use /home/yo30qaqy/modules
       </parameter>
       <parameter name="MODULE_LOAD" tag="ompi4">
         echo "Loading ompi4 packages"
         ${MODULE_CLEANUP}
 
-        spack load cmake@3.30.5/df4r5i6 llvm@main/2zfa3m7 openmpi@4.1.6/u4axpq2
+        spack load openmpi@4.1.8/gih4xnk
+        spack env activate ${jube_benchmark_home}
         module load java sos_ompi
       </parameter>
       <parameter name="MODULE_LOAD" tag="!ompi4">
@@ -67,7 +69,7 @@
           "cover_filtered": "${builds_folder}/CoVer_Install/bin/clangContracts --wrap-target ${def_wrapper_c} --predefined-contracts --instrument-contracts=filtered",
         }["${tool}"]
       </parameter>
-      <parameter name="base_runner" tag="!submit">mpiexec</parameter>
+      <parameter name="base_runner" tag="!submit">mpiexec --mca opal_warn_on_missing_libcuda 0</parameter>
       <parameter name="base_runner" tag="submit">srun --mpi=pmix --overcommit</parameter>
       <parameter name="runner" mode="python">
         {
