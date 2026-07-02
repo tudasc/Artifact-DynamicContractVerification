@@ -7,12 +7,13 @@
     <include from="jube_common.xml" path="common_setup/step" />
 
     <parameterset name="param_proxyapp">
-      <parameter name="proxy_app">lulesh,stencil,tealeaf</parameter>
+      <parameter name="proxy_app">lulesh,stencil,tealeaf,miniweather</parameter>
       <parameter name="proxy_params" mode="python">
         {
           "lulesh": "-s 20",
           "stencil": "100 48000",
           "tealeaf": "",
+          "miniweather": "",
         }["${proxy_app}"]
       </parameter>
     </parameterset>
@@ -25,15 +26,17 @@
           "lulesh": "1,2,3",
           "stencil": "1,2,4",
           "tealeaf": "1,2,4",
+          "miniweather": "1,2,4",
         }["${proxy_app}"]</parameter>
       <parameter name="nprocs" mode="python">
         {
           "lulesh": str((2+${num_nodes})**3),
           "stencil": str(${num_nodes}*48),
           "tealeaf": str(${num_nodes}*48),
+          "miniweather": str(${num_nodes}*48),
         }["${proxy_app}"]
       </parameter>
-      <parameter name="exec_cmd">${runner} -n ${nprocs} ./compile_${proxy_app}/${proxy_app}_${tool} ${proxy_params} &gt; proxy_out</parameter>
+      <parameter name="exec_cmd">${runner} -n ${nprocs} ./compile/${proxy_app}_${tool} ${proxy_params} &gt; proxy_out</parameter>
       <parameter name="exec_actual" tag="!submit">./submit.job</parameter>
       <parameter name="exec_actual" tag="submit">sbatch submit.job</parameter>
       <parameter name="postprocess" mode="python">
@@ -41,6 +44,7 @@
           "lulesh": "cat proxy_out | grep 'Elapsed time' | sed -r 's/Elapsed time\\s*=\\s*(.*)\\s*\\(s\\)/\\1/' &gt; time_parsed; touch bench_done",
           "stencil": "cat proxy_out | grep 'Total time' | sed -r 's/.*Total time\\s*\\(s\\):\\s*(.*)/\\1/' &gt; time_parsed; touch bench_done",
           "tealeaf": "cat proxy_out | grep Wallclock | tail -1 | sed -r 's/Wallclock:\\s*(.*)s/\\1/' &gt; time_parsed; touch bench_done",
+          "miniweather": "cat proxy_out | grep 'CPU Time' | sed -r 's/CPU Time: (.*) sec/\\1/' &gt; time_parsed; touch bench_done",
         }["${proxy_app}"]
       </parameter>
     </parameterset>
@@ -54,46 +58,28 @@
     <fileset name="tealeaf_src">
       <link>Performance_Sources/TeaLeaf/</link>
     </fileset>
+    <fileset name="miniweather_src">
+      <link>Performance_Sources/miniWeather/</link>
+    </fileset>
 
-    <step name="compile_lulesh" depend="tools_available" suffix="${tool}">
+    <step name="compile" depend="tools_available" suffix="${proxy_app}_${tool}">
+      <use>param_proxyapp</use>
       <use>param_environment</use>
+      <use>param_compilemode</use>
       <use>lulesh_src</use>
-      <use>param_compilemode</use>
-      <do>
-        ${MODULE_LOAD}
-        cd LULESH
-        ${compiler_cxx} -DUSE_MPI=1 -g -O3 -o lulesh_${tool} *.cc
-        cd ..
-        mv LULESH/lulesh_${tool} .
-        if [ -e LULESH/contract_messages.json ]; then
-          mv LULESH/contract_messages.json .
-        fi
-      </do>
-    </step>
-
-    <step name="compile_stencil" depend="tools_available" suffix="${tool}">
-      <use>param_environment</use>
       <use>stencil_src</use>
-      <use>param_compilemode</use>
-      <do>
-        ${MODULE_LOAD}
-        ${compiler_c} -g -O3 -DRADIUS=1 -DSTAR=1 -DDOUBLE=1 -lm Stencil/stencil.c -o stencil_${tool}
-      </do>
-    </step>
-
-    <step name="compile_tealeaf" depend="tools_available" suffix="${tool}">
-      <use>param_environment</use>
       <use>tealeaf_src</use>
-      <use>param_compilemode</use>
+      <use>miniweather_src</use>
       <do>
         ${MODULE_LOAD}
-        mkdir build
-        cd build
-        CC="${compiler_c} -g" CXX="${compiler_cxx} -g" cmake ../TeaLeaf -DCMAKE_BUILD_TYPE=Release -DMODEL=serial -DENABLE_MPI=ON
-        cmake --build .
-        mv serial-tealeaf ../tealeaf_${tool}
-        if [ -e contract_messages.json ]; then
-          mv contract_messages.json ..
+        if [[ "$proxy_app" == "lulesh" ]]; then
+          ${compiler_cxx} -DUSE_MPI=1 -g -O3 -o lulesh_${tool} LULESH/*.cc
+        elif [[ "$proxy_app" == "stencil" ]]; then
+          ${compiler_c} -g -O3 -DRADIUS=1 -DSTAR=1 -DDOUBLE=1 -lm Stencil/stencil.c -o stencil_${tool}
+        elif [[ "$proxy_app" == "tealeaf" ]]; then
+          ${compiler_cxx} -g -O3 -o tealeaf_${tool} TeaLeaf/driver/*.cpp TeaLeaf/src/serial/*.cpp -I TeaLeaf/src/serial -I TeaLeaf/driver
+        elif [[ "$proxy_app" == "miniweather" ]]; then
+          ${compiler_cxx} -g -O3 -D_NX=150 -D_NZ=75 -D_SIM_TIME=10000 -D_OUT_FREQ=1000 -D_DATA_SPEC=DATA_SPEC_THERMAL -lm miniWeather/miniWeather_mpi.cpp -o miniweather_${tool}
         fi
       </do>
     </step>
@@ -115,7 +101,7 @@
       <sub source="#POSTPROCESS#" dest="${postprocess}" />
     </substituteset>
 
-    <step name="run_proxy_app" depend="compile_lulesh,compile_stencil,compile_tealeaf" suffix="${proxy_app}_${tool}" iterations="5">
+    <step name="run_proxy_app" depend="compile" suffix="${proxy_app}_${tool}" iterations="5">
       <use>param_environment</use>
       <use>param_proxyapp</use>
       <use>param_exec</use>
