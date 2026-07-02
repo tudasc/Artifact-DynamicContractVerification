@@ -19,7 +19,7 @@
     </parameterset>
 
     <parameterset name="param_exec">
-      <parameter name="project_id">project02559</parameter>
+      <parameter name="project_id">extension00001</parameter>
       <parameter name="num_nodes" tag="!submit">1</parameter>
       <parameter name="num_nodes" tag="submit" mode="python">
         {
