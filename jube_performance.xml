@@ -107,8 +107,8 @@
       <use>param_exec</use>
       <use>substituteset_platform</use>
       <do done_file="bench_done">
-        if [ -e ./compile_${proxy_app}/contract_messages.json ]; then
-          cp ./compile_${proxy_app}/contract_messages.json contract_messages.json
+        if [ -e ./compile/contract_messages.json ]; then
+          cp ./compile/contract_messages.json contract_messages.json
         fi
         cp ${jube_benchmark_home}/bench_data/tea.{in,problems} .
         chmod +x submit.job
