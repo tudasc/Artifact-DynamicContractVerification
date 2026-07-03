@@ -13,6 +13,7 @@ spack:
   specs:
     - llvm@22
     - cmake@4.2.3
+    - openjdk@25
   packages:
     all:
       permissions:
