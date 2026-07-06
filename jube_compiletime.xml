@@ -18,9 +18,12 @@
     <fileset name="miniweather_src">
       <link>Performance_Sources/miniWeather/</link>
     </fileset>
+    <fileset name="minimd_src">
+      <link>Performance_Sources/miniMD/</link>
+    </fileset>
 
     <parameterset name="param_proxyapp">
-      <parameter name="proxy_app">lulesh,stencil,tealeaf,miniweather</parameter>
+      <parameter name="proxy_app">lulesh,stencil,tealeaf,minimd</parameter>
     </parameterset>
     <parameterset name="param_compileargs">
       <parameter name="cover_analysis_arg" mode="python">
@@ -39,6 +42,7 @@
       <use>stencil_src</use>
       <use>tealeaf_src</use>
       <use>miniweather_src</use>
+      <use>minimd_src</use>
       <do>
         ${MODULE_LOAD}
         if [[ "$proxy_app" == "lulesh" ]]; then
@@ -48,7 +52,9 @@
         elif [[ "$proxy_app" == "tealeaf" ]]; then
           time ${compiler_cxx} ${cover_analysis_arg} -g -O3 -o tealeaf_${tool} TeaLeaf/driver/*.cpp TeaLeaf/src/serial/*.cpp -I TeaLeaf/src/serial -I TeaLeaf/driver
         elif [[ "$proxy_app" == "miniweather" ]]; then
-          time ${compiler_cxx} -g -O3 -D_NX=150 -D_NZ=75 -D_SIM_TIME=10000 -D_OUT_FREQ=1000 -D_DATA_SPEC=DATA_SPEC_THERMAL -lm miniWeather/miniWeather_mpi.cpp -o miniWeather_${tool}
+          time ${compiler_cxx} -g -O3 -D_NX=150 -D_NZ=75 -D_SIM_TIME=10000 -D_OUT_FREQ=1000 -D_DATA_SPEC=DATA_SPEC_THERMAL -lm miniWeather/miniWeather_mpi.cpp -o miniweather_${tool}
+        elif [[ "$proxy_app" == "minimd" ]]; then
+          time ${compiler_cxx} -g -O3 -lm miniMD/*.cpp -o minimd_${tool} -DOMPFORSCHEDULE=""
         fi
       </do>
     </step>
