@@ -14,6 +14,7 @@
           "stencil": "100 48000",
           "tealeaf": "",
           "miniweather": "",
+          "minimd": "-s 100 --nsteps 1000",
         }["${proxy_app}"]
       </parameter>
     </parameterset>
@@ -27,6 +28,7 @@
           "stencil": "1,2,4",
           "tealeaf": "1,2,4",
           "miniweather": "1,2,4",
+          "minimd": "1,2,4",
         }["${proxy_app}"]</parameter>
       <parameter name="nprocs" mode="python">
         {
@@ -34,6 +36,7 @@
           "stencil": str(${num_nodes}*48),
           "tealeaf": str(${num_nodes}*48),
           "miniweather": str(${num_nodes}*48),
+          "minimd": str(${num_nodes}*48),
         }["${proxy_app}"]
       </parameter>
       <parameter name="exec_cmd">${runner} -n ${nprocs} ./compile/${proxy_app}_${tool} ${proxy_params} &gt; proxy_out</parameter>
@@ -45,6 +48,7 @@
           "stencil": "cat proxy_out | grep 'Total time' | sed -r 's/.*Total time\\s*\\(s\\):\\s*(.*)/\\1/' &gt; time_parsed; touch bench_done",
           "tealeaf": "cat proxy_out | grep Wallclock | tail -1 | sed -r 's/Wallclock:\\s*(.*)s/\\1/' &gt; time_parsed; touch bench_done",
           "miniweather": "cat proxy_out | grep 'CPU Time' | sed -r 's/CPU Time: (.*) sec/\\1/' &gt; time_parsed; touch bench_done",
+          "minimd": "cat proxy_out | grep 'TOTAL TIME: ' | sed -r 's/TOTAL TIME: (.*) sec/\\1/' &gt; time_parsed; touch bench_done",
         }["${proxy_app}"]
       </parameter>
     </parameterset>
@@ -61,6 +65,9 @@
     <fileset name="miniweather_src">
       <link>Performance_Sources/miniWeather/</link>
     </fileset>
+    <fileset name="minimd_src">
+      <link>Performance_Sources/miniMD/</link>
+    </fileset>
 
     <step name="compile" depend="tools_available" suffix="${proxy_app}_${tool}">
       <use>param_proxyapp</use>
@@ -70,6 +77,7 @@
       <use>stencil_src</use>
       <use>tealeaf_src</use>
       <use>miniweather_src</use>
+      <use>minimd_src</use>
       <do>
         ${MODULE_LOAD}
         if [[ "$proxy_app" == "lulesh" ]]; then
@@ -80,6 +88,8 @@
           ${compiler_cxx} -g -O3 -o tealeaf_${tool} TeaLeaf/driver/*.cpp TeaLeaf/src/serial/*.cpp -I TeaLeaf/src/serial -I TeaLeaf/driver
         elif [[ "$proxy_app" == "miniweather" ]]; then
           ${compiler_cxx} -g -O3 -D_NX=150 -D_NZ=75 -D_SIM_TIME=10000 -D_OUT_FREQ=1000 -D_DATA_SPEC=DATA_SPEC_THERMAL -lm miniWeather/miniWeather_mpi.cpp -o miniweather_${tool}
+        elif [[ "$proxy_app" == "minimd" ]]; then
+          ${compiler_cxx} -g -O3 -lm miniMD/*.cpp -o minimd_${tool} -DOMPFORSCHEDULE=""
         fi
       </do>
     </step>
@@ -111,6 +121,7 @@
           cp ./compile/contract_messages.json contract_messages.json
         fi
         cp ${jube_benchmark_home}/bench_data/tea.{in,problems} .
+        cp ${jube_benchmark_home}/bench_data/in.lj.miniMD .
         chmod +x submit.job
         ${exec_actual}
       </do>
