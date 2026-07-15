@@ -53,7 +53,11 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <unistd.h>
 
 #include <stdlib.h>
+#ifdef STENCIL_OPENSHMEM
+#include <shmem.h>
+#else
 #include "mpi.h"
+#endif
 #include <sys/time.h>
 #define  USEC_TO_SEC   1.0e-6    /* to convert microsecs to secs */
 
@@ -233,11 +237,29 @@ double wtime() {
 }
 
 void bail_out(int error) {
-
   int error_tot;
+#ifdef STENCIL_OPENSHMEM
+  /* source/target and work arrays must be symmetric objects; static
+     variables live in the symmetric data segment, so they qualify. */
+  static int  source, target;
+  static long pSync[SHMEM_REDUCE_SYNC_SIZE];
+  static int  pWrk[SHMEM_REDUCE_MIN_WRKDATA_SIZE];
+  int i;
+
+  for (i=0; i<SHMEM_REDUCE_SYNC_SIZE; i++) pSync[i] = SHMEM_SYNC_VALUE;
+  source = error;
+  shmem_barrier_all();
+  shmem_int_max_to_all(&target, &source, 1, 0, 0, shmem_n_pes(), pWrk, pSync);
+  error_tot = target;
+  if (error_tot != 0) {
+    shmem_finalize();
+    exit(EXIT_FAILURE);
+  }
+#else
   MPI_Allreduce(&error, &error_tot, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
   if (error_tot != 0) {
     MPI_Finalize();
     exit(EXIT_FAILURE);
   }
+#endif
 }

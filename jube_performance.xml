@@ -11,7 +11,9 @@
       <parameter name="proxy_params" mode="python">
         {
           "lulesh": "-s 20",
+          "lulesh_shmem": "-s 20",
           "stencil": "100 48000",
+          "stencil_shmem": "100 48000",
           "tealeaf": "",
           "miniweather": "",
           "minimd": "-s 100 --nsteps 1000",
@@ -25,7 +27,9 @@
       <parameter name="num_nodes" tag="submit" mode="python">
         {
           "lulesh": "1,2,3",
+          "lulesh_shmem": "1,2,3",
           "stencil": "1,2,4",
+          "stencil_shmem": "1,2,4",
           "tealeaf": "1,2,4",
           "miniweather": "1,2,4",
           "minimd": "1,2,4",
@@ -33,7 +37,9 @@
       <parameter name="nprocs" mode="python">
         {
           "lulesh": str((2+${num_nodes})**3),
+          "lulesh_shmem": str((2+${num_nodes})**3),
           "stencil": str(${num_nodes}*48),
+          "stencil_shmem": str(${num_nodes}*48),
           "tealeaf": str(${num_nodes}*48),
           "miniweather": str(${num_nodes}*48),
           "minimd": str(${num_nodes}*48),
@@ -45,7 +51,9 @@
       <parameter name="postprocess" mode="python">
         {
           "lulesh": "cat proxy_out | grep 'Elapsed time' | sed -r 's/Elapsed time\\s*=\\s*(.*)\\s*\\(s\\)/\\1/' &gt; time_parsed; touch bench_done",
+          "lulesh_shmem": "cat proxy_out | grep 'Elapsed time' | sed -r 's/Elapsed time\\s*=\\s*(.*)\\s*\\(s\\)/\\1/' &gt; time_parsed; touch bench_done",
           "stencil": "cat proxy_out | grep 'Total time' | sed -r 's/.*Total time\\s*\\(s\\):\\s*(.*)/\\1/' &gt; time_parsed; touch bench_done",
+          "stencil_shmem": "cat proxy_out | grep 'Total time' | sed -r 's/.*Total time\\s*\\(s\\):\\s*(.*)/\\1/' &gt; time_parsed; touch bench_done",
           "tealeaf": "cat proxy_out | grep Wallclock | tail -1 | sed -r 's/Wallclock:\\s*(.*)s/\\1/' &gt; time_parsed; touch bench_done",
           "miniweather": "cat proxy_out | grep 'CPU Time' | sed -r 's/CPU Time: (.*) sec/\\1/' &gt; time_parsed; touch bench_done",
           "minimd": "cat proxy_out | grep 'TOTAL TIME: ' | sed -r 's/TOTAL TIME: (.*) sec/\\1/' &gt; time_parsed; touch bench_done",
@@ -55,6 +63,9 @@
 
     <fileset name="lulesh_src">
       <link>Performance_Sources/LULESH/</link>
+    </fileset>
+    <fileset name="lulesh_shmem_src">
+      <link>Performance_Sources/LULESH-SHMEM/</link>
     </fileset>
     <fileset name="stencil_src">
       <link>Performance_Sources/Stencil/</link>
@@ -74,6 +85,7 @@
       <use>param_environment</use>
       <use>param_compilemode</use>
       <use>lulesh_src</use>
+      <use>lulesh_shmem_src</use>
       <use>stencil_src</use>
       <use>tealeaf_src</use>
       <use>miniweather_src</use>
@@ -81,15 +93,19 @@
       <do>
         ${MODULE_LOAD}
         if [[ "$proxy_app" == "lulesh" ]]; then
-          ${compiler_cxx} -DUSE_MPI=1 -g -O3 -o lulesh_${tool} LULESH/*.cc
+          ${compiler_cxx} -DUSE_MPI=1 -g -O3 -o ${proxy_app}_${tool} LULESH/*.cc
+        elif [[ "$proxy_app" == "lulesh_shmem" ]]; then
+          ${compiler_cxx} -DUSE_SHMEM=1 -g -O3 -o ${proxy_app}_${tool} LULESH-SHMEM/*.cc
         elif [[ "$proxy_app" == "stencil" ]]; then
-          ${compiler_c} -g -O3 -DRADIUS=1 -DSTAR=1 -DDOUBLE=1 -lm Stencil/stencil.c -o stencil_${tool}
+          ${compiler_c} -g -O3 -DRADIUS=1 -DSTAR=1 -DDOUBLE=1 -lm Stencil/stencil.c -o ${proxy_app}_${tool}
+        elif [[ "$proxy_app" == "stencil_shmem" ]]; then
+          ${compiler_c} -g -O3 -DRADIUS=1 -DSTAR=1 -DDOUBLE=1 -lm Stencil/stencil_shmem.c -o ${proxy_app}_${tool}
         elif [[ "$proxy_app" == "tealeaf" ]]; then
-          ${compiler_cxx} -g -O3 -o tealeaf_${tool} TeaLeaf/driver/*.cpp TeaLeaf/src/serial/*.cpp -I TeaLeaf/src/serial -I TeaLeaf/driver
+          ${compiler_cxx} -g -O3 -o ${proxy_app}_${tool} TeaLeaf/driver/*.cpp TeaLeaf/src/serial/*.cpp -I TeaLeaf/src/serial -I TeaLeaf/driver
         elif [[ "$proxy_app" == "miniweather" ]]; then
-          ${compiler_cxx} -g -O3 -D_NX=150 -D_NZ=75 -D_SIM_TIME=10000 -D_OUT_FREQ=1000 -D_DATA_SPEC=DATA_SPEC_THERMAL -lm miniWeather/miniWeather_mpi.cpp -o miniweather_${tool}
+          ${compiler_cxx} -g -O3 -D_NX=150 -D_NZ=75 -D_SIM_TIME=10000 -D_OUT_FREQ=1000 -D_DATA_SPEC=DATA_SPEC_THERMAL -lm miniWeather/miniWeather_mpi.cpp -o ${proxy_app}_${tool}
         elif [[ "$proxy_app" == "minimd" ]]; then
-          ${compiler_cxx} -g -O3 -lm miniMD/*.cpp -o minimd_${tool} -DOMPFORSCHEDULE=""
+          ${compiler_cxx} -g -O3 -lm miniMD/*.cpp -o ${proxy_app}_${tool} -DOMPFORSCHEDULE=""
         fi
       </do>
     </step>

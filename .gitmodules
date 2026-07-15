@@ -10,3 +10,9 @@
 [submodule "Tool_Sources/MUST"]
 	path = Tool_Sources/MUST
 	url = git@git-ce.rwth-aachen.de:hpc-research/correctness/MUST
+[submodule "Tool_Sources/CoVerInline"]
+	path = Tool_Sources/CoVerInline
+	url = https://github.com/tudasc/CoVer/
+[submodule "Performance_Sources/LULESH-SHMEM"]
+	path = Performance_Sources/LULESH-SHMEM
+	url = git@github.com:tudasc/LULESH-SHMEM

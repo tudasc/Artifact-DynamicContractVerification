@@ -48,7 +48,7 @@
       <parameter name="tool" tag="cover">cover</parameter>
       <parameter name="tool" tag="cover_filtered">cover_filtered</parameter>
       <parameter name="def_wrapper_c">oshcc -lmpi</parameter>
-      <parameter name="def_wrapper_cxx">oshc++ -lmpi</parameter>
+      <parameter name="def_wrapper_cxx">oshcxx -lmpi</parameter>
       <parameter name="compiler_cxx" mode="python">
         {
           "base": "${def_wrapper_cxx}",
