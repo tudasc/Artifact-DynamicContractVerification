@@ -15,7 +15,7 @@
 	url = https://github.com/tudasc/CoVer/
 [submodule "Performance_Sources/LULESH-SHMEM"]
 	path = Performance_Sources/LULESH-SHMEM
-	url = git@github.com:tudasc/LULESH-SHMEM
+	url = https://github.com/tudasc/LULESH-SHMEM
 [submodule "Performance_Sources/TeaLeaf-SHMEM"]
 	path = Performance_Sources/TeaLeaf-SHMEM
 	url = https://github.com/tudasc/TeaLeaf-SHMEM
