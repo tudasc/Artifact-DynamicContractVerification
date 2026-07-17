@@ -9,11 +9,17 @@
     <fileset name="lulesh_src">
       <link>Performance_Sources/LULESH/</link>
     </fileset>
+    <fileset name="lulesh_shmem_src">
+      <link>Performance_Sources/LULESH-SHMEM/</link>
+    </fileset>
     <fileset name="stencil_src">
       <link>Performance_Sources/Stencil/</link>
     </fileset>
     <fileset name="tealeaf_src">
       <link>Performance_Sources/TeaLeaf/</link>
+    </fileset>
+    <fileset name="tealeaf_shmem_src">
+      <link>Performance_Sources/TeaLeaf-SHMEM/</link>
     </fileset>
     <fileset name="miniweather_src">
       <link>Performance_Sources/miniWeather/</link>
@@ -23,7 +29,7 @@
     </fileset>
 
     <parameterset name="param_proxyapp">
-      <parameter name="proxy_app">lulesh,stencil,tealeaf,minimd</parameter>
+      <parameter name="proxy_app">lulesh_shmem,stencil_shmem,tealeaf_shmem</parameter>
     </parameterset>
     <parameterset name="param_compileargs">
       <parameter name="cover_analysis_arg" mode="python">
@@ -39,22 +45,30 @@
       <use>param_compilemode</use>
       <use>param_compileargs</use>
       <use>lulesh_src</use>
+      <use>lulesh_shmem_src</use>
       <use>stencil_src</use>
       <use>tealeaf_src</use>
+      <use>tealeaf_shmem_src</use>
       <use>miniweather_src</use>
       <use>minimd_src</use>
       <do>
         ${MODULE_LOAD}
         if [[ "$proxy_app" == "lulesh" ]]; then
-          time ${compiler_cxx} ${cover_analysis_arg} -DUSE_MPI=1 -g -O3 -o lulesh_${tool} LULESH/*.cc
+          time ${compiler_cxx} ${cover_analysis_arg} -DUSE_MPI=1 -g -O3 -o ${proxy_app}_${tool} LULESH/*.cc
+        elif [[ "$proxy_app" == "lulesh_shmem" ]]; then
+          time ${compiler_cxx} ${cover_analysis_arg} -DUSE_SHMEM=1 -g -O3 -o ${proxy_app}_${tool} LULESH-SHMEM/*.cc
         elif [[ "$proxy_app" == "stencil" ]]; then
-          time ${compiler_c} ${cover_analysis_arg} -g -O3 -DRADIUS=1 -DSTAR=1 -DDOUBLE=1 -lm Stencil/stencil.c -o stencil_${tool}
+          time ${compiler_c} ${cover_analysis_arg} -g -O3 -DRADIUS=1 -DSTAR=1 -DDOUBLE=1 -lm Stencil/stencil.c -o ${proxy_app}_${tool}
+        elif [[ "$proxy_app" == "stencil_shmem" ]]; then
+          time ${compiler_c} ${cover_analysis_arg} -g -O3 -DRADIUS=1 -DSTAR=1 -DDOUBLE=1 -lm Stencil/stencil_shmem.c -o ${proxy_app}_${tool}
         elif [[ "$proxy_app" == "tealeaf" ]]; then
-          time ${compiler_cxx} ${cover_analysis_arg} -g -O3 -o tealeaf_${tool} TeaLeaf/driver/*.cpp TeaLeaf/src/serial/*.cpp -I TeaLeaf/src/serial -I TeaLeaf/driver
+          time ${compiler_cxx} ${cover_analysis_arg} -g -O3 -o ${proxy_app}_${tool} TeaLeaf/driver/*.cpp TeaLeaf/src/serial/*.cpp -I TeaLeaf/src/serial -I TeaLeaf/driver
+        elif [[ "$proxy_app" == "tealeaf_shmem" ]]; then
+          time ${compiler_cxx} ${cover_analysis_arg} -g -O3 -o ${proxy_app}_${tool} TeaLeaf-SHMEM/driver/*.cpp TeaLeaf-SHMEM/src/serial/*.cpp -I TeaLeaf-SHMEM/src/serial -I TeaLeaf-SHMEM/driver
         elif [[ "$proxy_app" == "miniweather" ]]; then
-          time ${compiler_cxx} -g -O3 -D_NX=150 -D_NZ=75 -D_SIM_TIME=10000 -D_OUT_FREQ=1000 -D_DATA_SPEC=DATA_SPEC_THERMAL -lm miniWeather/miniWeather_mpi.cpp -o miniweather_${tool}
+          time ${compiler_cxx} -g -O3 -D_NX=150 -D_NZ=75 -D_SIM_TIME=10000 -D_OUT_FREQ=1000 -D_DATA_SPEC=DATA_SPEC_THERMAL -lm miniWeather/miniWeather_mpi.cpp -o ${proxy_app}_${tool}
         elif [[ "$proxy_app" == "minimd" ]]; then
-          time ${compiler_cxx} -g -O3 -lm miniMD/*.cpp -o minimd_${tool} -DOMPFORSCHEDULE=""
+          time ${compiler_cxx} -g -O3 -lm miniMD/*.cpp -o ${proxy_app}_${tool} -DOMPFORSCHEDULE=""
         fi
       </do>
     </step>
