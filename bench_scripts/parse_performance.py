@@ -1,4 +1,5 @@
 import pandas as pd
+import os
 import sys
 
 if len(sys.argv) < 2:
@@ -23,9 +24,10 @@ for proxy_app in proxy_apps:
         for tool in tool_configurations:
             cur_df = row_df[row_df["Tool"] == tool]
             if num_tasks not in tmpdata: tmpdata[num_tasks] = {}
-            tmpdata[num_tasks][tool] = cur_df["Time (Avg)"].item()
+            times = cur_df["Time (Avg)"]
+            tmpdata[num_tasks][tool] = times.item() if len(times) == 1 else pd.NA
 
-        new_df.loc[num_tasks] = [tmpdata[num_tasks]["base"], tmpdata[num_tasks]["cover"], tmpdata[num_tasks]["cover_filtered"], tmpdata[num_tasks]["must"], tmpdata[num_tasks]["must_filtered"]]
+        new_df.loc[num_tasks] = [tmpdata[num_tasks][tool] for tool in tool_configurations]
 
     new_df.sort_index(inplace=True)
     new_df.to_csv(f"{proxy_app}_runtimes.csv", sep=";")
