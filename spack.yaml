@@ -14,16 +14,22 @@ spack:
     - llvm@22
     - cmake@4.2.3
     - openjdk@25
+    - openmpi@5.0.10 +atomics~cuda~debug+fortran+gpfs+internal-hwloc~internal-libevent+internal-pmix~ipv6~java~lustre~memchecker+openshmem~rocm+romio+rsh~static~two_level_namespace+vt+wrapper-rpath build_system=autotools fabrics:=ucc,ucx romio-filesystem:=none schedulers:=slurm %c,cxx=llvm@21
   packages:
     all:
       permissions:
         read: group
         write: group
         group: yo30qaqy
-    cmake:
-      prefer: ['%c,cxx=gcc@14.3.0']
+      prefer: ["%c,cxx=llvm@21"]
     llvm:
-      prefer: ['%c,cxx=gcc@14.3.0']
+      buildable: true
+    openmpi:
+      buildable: true
+    curl:
+      require: "+libidn2 +nghttp2 tls=openssl"
+    ucx:
+      require: "+dc +ib_hw_tm +mlx5_dv +openmp +optimizations +pic +thread_multiple +verbs %c,cxx=llvm@21"
       buildable: true
   view: true
   concretizer:
