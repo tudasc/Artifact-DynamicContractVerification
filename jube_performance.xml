@@ -7,7 +7,7 @@
     <include from="jube_common.xml" path="common_setup/step" />
 
     <parameterset name="param_proxyapp">
-      <parameter name="proxy_app">lulesh,stencil,tealeaf,miniweather</parameter>
+      <parameter name="proxy_app">stencil,stencil_shmem,lulesh,lulesh_shmem,tealeaf,tealeaf_shmem</parameter>
       <parameter name="proxy_params" mode="python">
         {
           "lulesh": "-s 20",

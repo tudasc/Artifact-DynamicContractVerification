@@ -29,7 +29,7 @@
     </fileset>
 
     <parameterset name="param_proxyapp">
-      <parameter name="proxy_app">lulesh_shmem,stencil_shmem,tealeaf_shmem</parameter>
+      <parameter name="proxy_app">lulesh,lulesh_shmem,stencil,stencil_shmem,tealeaf,tealeaf_shmem</parameter>
     </parameterset>
     <parameterset name="param_compileargs">
       <parameter name="cover_analysis_arg" mode="python">
