@@ -14,6 +14,8 @@
       <parameter name="PMIX_MCA_gds" export="true">hash</parameter>
       <parameter name="PMIX_MCA_psec" export="true">^munge</parameter>
       <parameter name="UCX_MEM_MMAP_HOOK_MODE" export="true">none</parameter>
+      <parameter name="UCX_TLS" export="true">^cma</parameter>
+      <parameter name="UCX_NET_DEVICES" export="true">ib0</parameter>
       <parameter name="OMPI_MCA_memory" export="true">^patcher</parameter>
       <parameter name="MODULE_CLEANUP">
         module purge
@@ -21,23 +23,21 @@
         despacktivate
         module use /home/yo30qaqy/modules
       </parameter>
-      <parameter name="MODULE_LOAD" tag="ompi4">
-        echo "Loading ompi4 packages"
+      <parameter name="MODULE_LOAD" tag="!mpich">
         ${MODULE_CLEANUP}
 
-        spack load openmpi@4.1.8/gih4xnk
+        echo "Loading packages"
         spack env activate ${jube_benchmark_home}
-        module load java sos_ompi
       </parameter>
-      <parameter name="MODULE_LOAD" tag="!ompi4">
+      <parameter name="MODULE_LOAD" tag="mpich">
         echo "Loading ompi5 packages"
         ${MODULE_CLEANUP}
 
-        spack load cmake@3.30.5/df4r5i6 llvm@main/2zfa3m7 openmpi@5.0.5/jvkspfx
+        spack load cmake@3.30.5/df4r5i6 llvm@main/2zfa3m7 mpich@4.3.2/stqq3gd
         module load java sos_ompi
       </parameter>
-      <parameter name="builds_folder" tag="ompi4">${jube_benchmark_home}/Tool_Builds/ompi4</parameter>
-      <parameter name="builds_folder" tag="!ompi4">${jube_benchmark_home}/Tool_Builds/ompi5</parameter>
+      <parameter name="builds_folder" tag="!mpich">${jube_benchmark_home}/Tool_Builds/ompi</parameter>
+      <parameter name="builds_folder" tag="mpich">${jube_benchmark_home}/Tool_Builds/mpich</parameter>
       <parameter name="MUST_DISABLE_TSAN_ONREPORT" export="true">1</parameter>
       <parameter name="TSAN_OPTIONS" export="true">log_path=stderr</parameter>
     </parameterset>
@@ -69,7 +69,7 @@
           "cover_filtered": "${builds_folder}/CoVer_Install/bin/clangContracts --wrap-target ${def_wrapper_c} --predefined-contracts --instrument-contracts=filtered",
         }["${tool}"]
       </parameter>
-      <parameter name="base_runner" tag="!submit">mpiexec --mca opal_warn_on_missing_libcuda 0</parameter>
+      <parameter name="base_runner" tag="!submit">mpiexec</parameter>
       <parameter name="base_runner" tag="submit">srun --mpi=pmix --overcommit</parameter>
       <parameter name="runner" mode="python">
         {
@@ -86,7 +86,7 @@
       <use>param_environment</use>
       <do tag="cover|cover_filtered|must_filtered">
         ${MODULE_LOAD}
-        cmake -S ${jube_benchmark_home}/Tool_Sources/CoVer -B ${builds_folder}/CoVer_Build -DCMAKE_INSTALL_PREFIX=${builds_folder}/CoVer_Install -DCMAKE_BUILD_TYPE=Release -DSHMEM_HEADER_PATH=${jube_benchmark_home}/bench_data/shmem.h
+        cmake -S ${jube_benchmark_home}/Tool_Sources/CoVer -B ${builds_folder}/CoVer_Build -DCMAKE_INSTALL_PREFIX=${builds_folder}/CoVer_Install -DCMAKE_BUILD_TYPE=Release
         cmake --build ${builds_folder}/CoVer_Build --target install -j 32
       </do>
     </step>
